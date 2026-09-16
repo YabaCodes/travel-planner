@@ -1,62 +1,61 @@
+import { useLiveQuery } from 'dexie-react-hooks'
+import { useNavigate } from 'react-router-dom'
 import PageIntro from '../../shared/components/PageIntro'
 import PlaceholderPanel from '../../shared/components/PlaceholderPanel'
-import DatabaseStatusPanel from '../../shared/components/DatabaseStatusPanel'
+import TripCard from '../../shared/components/TripCard'
 import CompassIcon from '../../shared/icons/CompassIcon'
 import PlusIcon from '../../shared/icons/PlusIcon'
+import { tripService, type TripSummary } from '../../data/services/tripService'
+
+const groups: Array<{ key: ReturnType<typeof tripService.classifySummary>; title: string; description: string }> = [
+  { key: 'current', title: 'Current', description: 'Trips happening now.' },
+  { key: 'upcoming', title: 'Upcoming', description: 'Dated trips ahead.' },
+  { key: 'idea', title: 'Ideas & planning', description: 'Flexible or not-yet-dated trips.' },
+  { key: 'past', title: 'Past', description: 'Completed, archived, or finished trips.' },
+]
 
 function TripsScreen() {
+  const navigate = useNavigate()
+  const summaries = useLiveQuery(() => tripService.listSummaries(), [])
+
+  const duplicate = async (summary: TripSummary) => {
+    const id = await tripService.duplicateTrip(summary.trip.id)
+    navigate(`/trip/${id}`)
+  }
+
+  const remove = async (summary: TripSummary) => {
+    if (!window.confirm(`Delete “${summary.trip.title}”? The trip will be soft-deleted so its records remain recoverable in the database.`)) return
+    await tripService.softDeleteTrip(summary.trip.id)
+  }
+
+  const hasTrips = Boolean(summaries?.length)
+
   return (
     <div className="page-stack">
       <PageIntro
         eyebrow="Your travel workspace"
         title="My Trips"
-        description="Every trip will start here — from the first idea through planning, preparation, and the days you are actually travelling."
-        action={
-          <button className="button button--primary" type="button" disabled title="Trip creation arrives in Milestone 3">
-            <PlusIcon />
-            New Trip
-          </button>
-        }
+        description="Plan, prepare, and travel from one reusable workspace. Each trip keeps its own itinerary, preferences, bookings, packing, and essential information."
+        action={<button className="button button--primary" type="button" onClick={() => navigate('/trips/new')}><PlusIcon />New Trip</button>}
       />
 
-      <div className="status-banner" role="status">
-        <span className="status-banner__dot" />
-        Local-first storage is active. Milestone 3 will connect real trip creation to this database.
-      </div>
+      <div className="status-banner" role="status"><span className="status-banner__dot" />Local-first storage is active. Trips you create here are saved on this device and remain available offline.</div>
 
-      <DatabaseStatusPanel />
+      {summaries === undefined ? <div className="loading-card">Loading your trips…</div> : null}
 
-      <PlaceholderPanel
-        icon={<CompassIcon />}
-        title="No trips yet"
-        body="Trip creation arrives next. The database underneath this screen is already structured for trips, destinations, itinerary days, places, bookings, packing, and trip information."
-      >
-        <div className="feature-preview" aria-label="Future trip card preview">
-          <div className="feature-preview__label">Coming in Milestone 3</div>
-          <div className="feature-preview__row">
-            <span>Trip cards</span>
-            <span>Dates · status · duration</span>
-          </div>
-        </div>
-      </PlaceholderPanel>
+      {summaries !== undefined && !hasTrips ? (
+        <PlaceholderPanel icon={<CompassIcon />} title="Start with your first trip" body="Create a Trip Brief now. You can use exact dates or keep it as an idea until the schedule is decided.">
+          <button className="button button--primary empty-state-action" type="button" onClick={() => navigate('/trips/new')}><PlusIcon />Create first trip</button>
+        </PlaceholderPanel>
+      ) : null}
 
-      <section className="foundation-grid" aria-label="Data foundation capabilities">
-        <article className="foundation-card">
-          <span className="foundation-card__index">01</span>
-          <h3>Local-first</h3>
-          <p>Travel data is stored in IndexedDB through Dexie and remains usable offline.</p>
-        </article>
-        <article className="foundation-card">
-          <span className="foundation-card__index">02</span>
-          <h3>Typed schema</h3>
-          <p>Eighteen related tables establish the data model before feature screens depend on it.</p>
-        </article>
-        <article className="foundation-card">
-          <span className="foundation-card__index">03</span>
-          <h3>Reactive</h3>
-          <p>Dexie live queries update the interface automatically when database records change.</p>
-        </article>
-      </section>
+      {hasTrips ? <div className="trip-groups">
+        {groups.map((group) => {
+          const items = summaries!.filter((summary) => tripService.classifySummary(summary) === group.key)
+          if (!items.length) return null
+          return <section className="trip-group" key={group.key}><div className="trip-group__heading"><div><h2>{group.title}</h2><p>{group.description}</p></div><span>{items.length}</span></div><div className="trip-card-grid">{items.map((summary) => <TripCard key={summary.trip.id} summary={summary} onOpen={() => navigate(`/trip/${summary.trip.id}`)} onEdit={() => navigate(`/trip/${summary.trip.id}/edit`)} onDuplicate={() => duplicate(summary)} onDelete={() => remove(summary)} />)}</div></section>
+        })}
+      </div> : null}
     </div>
   )
 }

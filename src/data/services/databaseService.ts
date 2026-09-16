@@ -18,6 +18,7 @@ export type PersistenceSupport = 'granted' | 'not-granted' | 'unsupported'
 
 export async function initializeDatabase() {
   await db.open()
+  await clearMilestone2TestData()
   await requestPersistentStorage()
 }
 
