@@ -10,6 +10,9 @@ import TripDayScreen from './features/itinerary/TripDayScreen'
 import ActivityEditorScreen from './features/itinerary/ActivityEditorScreen'
 import TodayScreen from './features/today/TodayScreen'
 import MoreScreen from './features/more/MoreScreen'
+import PlacesScreen from './features/places/PlacesScreen'
+import PlaceEditorScreen from './features/places/PlaceEditorScreen'
+import SchedulePlaceScreen from './features/places/SchedulePlaceScreen'
 
 function App() {
   return (
@@ -27,6 +30,10 @@ function App() {
           <Route path="/trip/:tripId/itinerary/day/:dayId/activity/:activityId/edit" element={<ActivityEditorScreen />} />
           <Route path="/trip/:tripId/today" element={<TodayScreen />} />
           <Route path="/trip/:tripId/more" element={<MoreScreen />} />
+          <Route path="/trip/:tripId/more/places" element={<PlacesScreen />} />
+          <Route path="/trip/:tripId/more/places/new" element={<PlaceEditorScreen />} />
+          <Route path="/trip/:tripId/more/places/:tripPlaceId/edit" element={<PlaceEditorScreen />} />
+          <Route path="/trip/:tripId/more/places/:tripPlaceId/schedule" element={<SchedulePlaceScreen />} />
           <Route path="*" element={<Navigate to="/trips" replace />} />
         </Route>
       </Routes>

@@ -19,6 +19,7 @@ const orderedActivities = (activities: Activity[]) => active(activities).sort((a
 
 export interface ActivityDraft {
   tripDayId: string
+  tripPlaceId: string | null
   title: string
   type: ActivityType
   priority: Priority
@@ -176,6 +177,11 @@ export const itineraryService = {
     if (!trip || trip.deleted_at) throw new Error('Trip not found.')
     if (!day || day.deleted_at || day.trip_id !== tripId) throw new Error('Choose a valid trip day.')
     if (!draft.title.trim()) throw new Error('Activity title is required.')
+    if (draft.type === 'place') {
+      if (!draft.tripPlaceId) throw new Error('Choose a saved place.')
+      const tripPlace = await db.tripPlaces.get(draft.tripPlaceId)
+      if (!tripPlace || tripPlace.deleted_at || tripPlace.trip_id !== tripId) throw new Error('Saved place does not belong to this trip.')
+    }
     validateStartTime(draft.startTime)
 
     const dayActivities = orderedActivities(await db.activities.where('trip_day_id').equals(day.id).toArray())
@@ -185,7 +191,7 @@ export const itineraryService = {
       ...createRecordMetadata(),
       trip_id: tripId,
       trip_day_id: day.id,
-      trip_place_id: null,
+      trip_place_id: draft.type === 'place' ? draft.tripPlaceId : null,
       title: draft.title.trim(),
       type: draft.type,
       priority: draft.priority,
@@ -208,6 +214,11 @@ export const itineraryService = {
     if (!activity || activity.deleted_at || activity.trip_id !== tripId) throw new Error('Activity not found.')
     if (!targetDay || targetDay.deleted_at || targetDay.trip_id !== tripId) throw new Error('Choose a valid trip day.')
     if (!draft.title.trim()) throw new Error('Activity title is required.')
+    if (draft.type === 'place') {
+      if (!draft.tripPlaceId) throw new Error('Choose a saved place.')
+      const tripPlace = await db.tripPlaces.get(draft.tripPlaceId)
+      if (!tripPlace || tripPlace.deleted_at || tripPlace.trip_id !== tripId) throw new Error('Saved place does not belong to this trip.')
+    }
     validateStartTime(draft.startTime)
 
     let position = activity.position
@@ -219,6 +230,7 @@ export const itineraryService = {
     await db.activities.put(touchRecord({
       ...activity,
       trip_day_id: targetDay.id,
+      trip_place_id: draft.type === 'place' ? draft.tripPlaceId : null,
       title: draft.title.trim(),
       type: draft.type,
       priority: draft.priority,
