@@ -26,7 +26,7 @@ function AppShell() {
           <button className="brand-button" onClick={() => navigate('/trips')} aria-label="Open My Trips">
             <AppMark />
           </button>
-          <span className="milestone-pill">Foundation · 0.1</span>
+          <span className="milestone-pill">Data layer · 0.2</span>
         </header>
 
         <main className="app-content">

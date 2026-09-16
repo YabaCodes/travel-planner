@@ -1,5 +1,6 @@
 import PageIntro from '../../shared/components/PageIntro'
 import PlaceholderPanel from '../../shared/components/PlaceholderPanel'
+import DatabaseStatusPanel from '../../shared/components/DatabaseStatusPanel'
 import CompassIcon from '../../shared/icons/CompassIcon'
 import PlusIcon from '../../shared/icons/PlusIcon'
 
@@ -20,13 +21,15 @@ function TripsScreen() {
 
       <div className="status-banner" role="status">
         <span className="status-banner__dot" />
-        Foundation ready. Trip creation and local storage are the next milestones.
+        Local-first storage is active. Milestone 3 will connect real trip creation to this database.
       </div>
+
+      <DatabaseStatusPanel />
 
       <PlaceholderPanel
         icon={<CompassIcon />}
         title="No trips yet"
-        body="This clean state is intentional for Milestone 1. Once the database layer is added, trips you create will appear here and remain available offline."
+        body="Trip creation arrives next. The database underneath this screen is already structured for trips, destinations, itinerary days, places, bookings, packing, and trip information."
       >
         <div className="feature-preview" aria-label="Future trip card preview">
           <div className="feature-preview__label">Coming in Milestone 3</div>
@@ -37,21 +40,21 @@ function TripsScreen() {
         </div>
       </PlaceholderPanel>
 
-      <section className="foundation-grid" aria-label="Foundation capabilities">
+      <section className="foundation-grid" aria-label="Data foundation capabilities">
         <article className="foundation-card">
           <span className="foundation-card__index">01</span>
-          <h3>Installable</h3>
-          <p>Configured as a standalone PWA for Home Screen installation.</p>
+          <h3>Local-first</h3>
+          <p>Travel data is stored in IndexedDB through Dexie and remains usable offline.</p>
         </article>
         <article className="foundation-card">
           <span className="foundation-card__index">02</span>
-          <h3>Offline shell</h3>
-          <p>The application shell is prepared for caching after the first load.</p>
+          <h3>Typed schema</h3>
+          <p>Eighteen related tables establish the data model before feature screens depend on it.</p>
         </article>
         <article className="foundation-card">
           <span className="foundation-card__index">03</span>
-          <h3>Responsive</h3>
-          <p>Bottom navigation on phones becomes a planning sidebar on larger screens.</p>
+          <h3>Reactive</h3>
+          <p>Dexie live queries update the interface automatically when database records change.</p>
         </article>
       </section>
     </div>

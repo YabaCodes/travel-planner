@@ -399,3 +399,101 @@ h2 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.database-panel {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--shadow);
+}
+
+.database-panel__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.database-panel__heading h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.database-panel__heading .eyebrow {
+  margin-bottom: 8px;
+}
+
+.database-panel__badge {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--success);
+  font-size: 0.72rem;
+  font-weight: 760;
+}
+
+.database-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.database-metric {
+  min-height: 86px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.database-metric span {
+  color: var(--ink-faint);
+  font-size: 0.75rem;
+  font-weight: 680;
+}
+
+.database-metric strong {
+  font-size: 1.35rem;
+}
+
+.database-metric__text {
+  font-size: 0.9rem !important;
+  line-height: 1.3;
+}
+
+.database-panel__copy {
+  margin: 18px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.database-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.database-panel__message {
+  margin: 14px 0 0;
+  color: var(--success);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+@media (min-width: 700px) {
+  .database-panel {
+    padding: 28px;
+  }
+
+  .database-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
