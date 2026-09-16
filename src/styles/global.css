@@ -937,3 +937,489 @@ h2 {
   .trip-overview-strip { grid-template-columns: repeat(4, 1fr); }
   .dashboard-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
 }
+
+/* Milestone 4 · itinerary and activity planning */
+.itinerary-summary-strip,
+.day-control-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.itinerary-summary-strip > div,
+.day-control-strip > div {
+  min-height: 86px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.itinerary-summary-strip span,
+.day-control-strip span {
+  color: var(--ink-faint);
+  font-size: .7rem;
+  font-weight: 720;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.itinerary-summary-strip strong,
+.day-control-strip strong {
+  margin-top: 9px;
+  font-size: 1.2rem;
+}
+
+.day-control-strip small {
+  margin-top: 5px;
+  color: var(--ink-soft);
+  font-size: .72rem;
+  line-height: 1.4;
+}
+
+.itinerary-empty,
+.timeline-empty {
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,.84);
+  box-shadow: var(--shadow);
+}
+
+.itinerary-empty__number {
+  margin-bottom: 40px;
+  color: var(--accent-mid);
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.itinerary-empty h2,
+.timeline-empty h2 {
+  margin-bottom: 9px;
+  font-size: 1.35rem;
+}
+
+.itinerary-empty p,
+.timeline-empty p {
+  max-width: 620px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.day-card-list {
+  display: grid;
+  gap: 12px;
+}
+
+.day-card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,.88);
+  box-shadow: 0 10px 32px rgba(38,49,45,.06);
+  overflow: hidden;
+}
+
+.day-card__main {
+  width: 100%;
+  padding: 0 52px 0 0;
+  background: transparent;
+  color: inherit;
+  display: grid;
+  grid-template-columns: 92px minmax(0,1fr);
+  text-align: left;
+  cursor: pointer;
+}
+
+.day-card__identity {
+  padding: 19px 14px;
+  border-right: 1px solid var(--border);
+  background: rgba(238,237,230,.64);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.day-card__identity span {
+  color: var(--accent-mid);
+  font-size: .68rem;
+  font-weight: 780;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+
+.day-card__identity strong {
+  margin-top: 6px;
+  font-size: .92rem;
+}
+
+.day-card__identity small {
+  margin-top: 3px;
+  color: var(--ink-faint);
+  font-size: .66rem;
+}
+
+.day-card__content {
+  min-width: 0;
+  padding: 18px 14px;
+}
+
+.day-card__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.day-card__topline h2 {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.25;
+}
+
+.day-card__content > p {
+  margin: 5px 0 12px;
+  color: var(--ink-soft);
+  font-size: .78rem;
+}
+
+.day-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  color: var(--ink-faint);
+  font-size: .7rem;
+  font-weight: 620;
+}
+
+.day-card__add {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  position: absolute;
+  right: 12px;
+  bottom: 14px;
+  cursor: pointer;
+}
+
+.day-card__add svg { width: 16px; height: 16px; }
+
+.load-pill,
+.priority-pill,
+.lock-pill,
+.conflict-pill,
+.activity-type {
+  width: fit-content;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: .63rem;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.load-pill { background: var(--surface-soft); color: var(--ink-soft); }
+.load-pill--on-target { background: var(--accent-soft); color: var(--success); }
+.load-pill--full { background: #f4e7d5; color: var(--warning); }
+.load-pill--empty { color: var(--ink-faint); }
+.warning-text { color: var(--warning) !important; }
+
+.back-row {
+  margin-bottom: -14px;
+  padding-top: 2px;
+}
+
+.day-details-card,
+.activity-editor-card {
+  padding: 21px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,.86);
+  box-shadow: var(--shadow);
+}
+
+.day-details-card__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.day-details-card__heading h2 {
+  margin: 0;
+  font-size: 1.12rem;
+}
+
+.compact-form { margin-top: 20px; }
+
+.day-details-summary {
+  margin-top: 17px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+}
+
+.day-details-summary > div {
+  padding: 13px;
+  border-radius: 13px;
+  background: var(--surface-soft);
+  display: grid;
+  gap: 6px;
+}
+
+.day-details-summary span {
+  color: var(--ink-faint);
+  font-size: .68rem;
+  font-weight: 720;
+}
+
+.day-details-summary strong {
+  font-size: .82rem;
+  line-height: 1.4;
+}
+
+.conflict-banner {
+  padding: 14px 16px;
+  border: 1px solid #e4cba8;
+  border-radius: var(--radius-md);
+  background: #f8efe3;
+  color: #755427;
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.conflict-banner strong,
+.conflict-banner span { display: inline; }
+
+.timeline-empty {
+  display: grid;
+  grid-template-columns: 22px minmax(0,1fr);
+  gap: 17px;
+}
+
+.timeline-empty__line {
+  width: 2px;
+  min-height: 120px;
+  margin: 2px auto;
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+
+.activity-timeline {
+  display: grid;
+}
+
+.activity-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 24px 86px minmax(0,1fr);
+  gap: 10px;
+  position: relative;
+}
+
+.activity-card__rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.activity-card__dot {
+  width: 11px;
+  height: 11px;
+  margin-top: 25px;
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  background: var(--accent-mid);
+  box-shadow: 0 0 0 1px var(--accent-mid);
+  z-index: 2;
+}
+
+.activity-card__line {
+  width: 1px;
+  flex: 1;
+  min-height: 42px;
+  background: var(--border);
+}
+
+.activity-card:last-child .activity-card__line { background: linear-gradient(var(--border), transparent); }
+
+.activity-card__time {
+  padding-top: 21px;
+}
+
+.activity-card__time strong,
+.activity-card__time small {
+  display: block;
+}
+
+.activity-card__time strong {
+  font-size: .75rem;
+  line-height: 1.35;
+}
+
+.activity-card__time small {
+  margin-top: 4px;
+  color: var(--ink-faint);
+  font-size: .63rem;
+  line-height: 1.35;
+}
+
+.activity-card__body {
+  min-width: 0;
+  margin-bottom: 12px;
+  padding: 17px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,.88);
+}
+
+.activity-card.has-conflict .activity-card__body { border-color: #dfbc8c; }
+.activity-card.is-complete .activity-card__body { opacity: .68; }
+
+.activity-card__topline {
+  min-height: 29px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.activity-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.activity-type { background: var(--accent-soft); color: var(--accent-mid); }
+.priority-pill { background: var(--surface-soft); color: var(--ink-soft); }
+.priority-pill--must_do { background: #e5eee9; color: var(--success); }
+.priority-pill--optional { color: var(--ink-faint); }
+.lock-pill { background: #e9e6f2; color: #5f557b; }
+.conflict-pill { background: #f5e6d4; color: var(--warning); }
+
+.activity-card h2 {
+  margin: 9px 0 4px;
+  font-size: 1rem;
+}
+
+.activity-card__body > p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.activity-menu { position: relative; }
+.activity-menu summary {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--ink-soft);
+  display: grid;
+  place-items: center;
+  list-style: none;
+  cursor: pointer;
+  letter-spacing: .08em;
+}
+.activity-menu summary::-webkit-details-marker { display: none; }
+.activity-menu[open] summary { background: var(--surface-soft); }
+.activity-menu__popover {
+  width: 140px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+  background: var(--surface);
+  box-shadow: 0 14px 38px rgba(25,38,32,.16);
+  position: absolute;
+  top: 34px;
+  right: 0;
+  z-index: 12;
+}
+.activity-menu__popover button {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  font-size: .75rem;
+  cursor: pointer;
+}
+.activity-menu__popover button:disabled { opacity: .35; }
+.activity-menu__popover button:active:not(:disabled) { background: var(--surface-soft); }
+
+.activity-card__controls {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+}
+
+.activity-card__controls label {
+  display: grid;
+  gap: 5px;
+}
+
+.activity-card__controls label > span {
+  color: var(--ink-faint);
+  font-size: .62rem;
+  font-weight: 700;
+}
+
+.activity-card__controls select {
+  min-width: 0;
+  width: 100%;
+  height: 34px;
+  padding: 0 7px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-size: .69rem;
+}
+
+.activity-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 9px;
+}
+
+.activity-type-option {
+  min-height: 96px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.activity-type-option strong,
+.activity-type-option small { display: block; }
+.activity-type-option strong { font-size: .82rem; }
+.activity-type-option small { margin-top: 5px; color: var(--ink-soft); font-size: .69rem; line-height: 1.4; }
+.activity-type-option.is-selected { border-color: #91ad9f; background: var(--accent-soft); }
+.activity-type-option.is-disabled { opacity: .48; cursor: not-allowed; }
+
+@media (min-width: 680px) {
+  .itinerary-summary-strip,
+  .day-control-strip { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .day-control-strip { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .day-card__main { grid-template-columns: 120px minmax(0,1fr); }
+  .day-card__identity { padding-left: 22px; }
+  .day-card__content { padding: 22px; }
+  .activity-card { grid-template-columns: 30px 112px minmax(0,1fr); gap: 14px; }
+  .activity-card__body { padding: 20px; }
+  .activity-type-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .activity-editor-card { padding: 30px; }
+}
