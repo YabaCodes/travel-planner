@@ -1,13 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 import PageIntro from '../../shared/components/PageIntro'
 import PlusIcon from '../../shared/icons/PlusIcon'
-import { packingService } from '../../data/services/packingService'
+import { packingService, type PackingOverview } from '../../data/services/packingService'
 import type { PackingItem } from '../../data/types/entities'
 import './packing.css'
 
 type PackingFilter = 'all' | 'unpacked' | 'required'
+type InitState = 'loading' | 'ready' | 'error'
+
+interface PackingQueryResult {
+  value: PackingOverview | null
+  error: string | null
+}
 
 const itemMatches = (item: PackingItem, filter: PackingFilter, search: string) => {
   const filterMatch = filter === 'all'
@@ -18,13 +24,51 @@ const itemMatches = (item: PackingItem, filter: PackingFilter, search: string) =
   return filterMatch && searchMatch
 }
 
+const errorMessage = (reason: unknown) => reason instanceof Error ? reason.message : 'Could not open the packing list.'
+
 function PackingScreen() {
   const { tripId = '' } = useParams()
   const navigate = useNavigate()
-  const data = useLiveQuery(() => packingService.getOverview(tripId), [tripId])
   const [filter, setFilter] = useState<PackingFilter>('all')
   const [search, setSearch] = useState('')
+  const [initState, setInitState] = useState<InitState>('loading')
+  const [initError, setInitError] = useState('')
+  const [initAttempt, setInitAttempt] = useState(0)
 
+  useEffect(() => {
+    let cancelled = false
+    setInitState('loading')
+    setInitError('')
+
+    packingService.initializePacking(tripId)
+      .then((found) => {
+        if (cancelled) return
+        if (!found) {
+          setInitError('This trip could not be found.')
+          setInitState('error')
+          return
+        }
+        setInitState('ready')
+      })
+      .catch((reason: unknown) => {
+        if (cancelled) return
+        setInitError(errorMessage(reason))
+        setInitState('error')
+      })
+
+    return () => { cancelled = true }
+  }, [initAttempt, tripId])
+
+  const queryResult = useLiveQuery<PackingQueryResult>(async () => {
+    if (initState !== 'ready') return { value: null, error: null }
+    try {
+      return { value: await packingService.getOverview(tripId), error: null }
+    } catch (reason) {
+      return { value: null, error: errorMessage(reason) }
+    }
+  }, [initState, tripId])
+
+  const data = queryResult?.value ?? null
   const visibleCategories = useMemo(() => {
     if (!data) return []
     return data.categories.map((view) => ({
@@ -33,8 +77,22 @@ function PackingScreen() {
     })).filter((view) => filter === 'all' && !search.trim() ? true : view.items.length > 0)
   }, [data, filter, search])
 
-  if (data === undefined) return <div className="page-stack"><div className="loading-card">Opening packing list…</div></div>
-  if (data === null) return <div className="page-stack"><PageIntro eyebrow="Packing" title="Trip not found" description="This trip may have been deleted." action={<button className="button button--secondary" onClick={() => navigate('/trips')}>Back to trips</button>} /></div>
+  if (initState === 'loading' || queryResult === undefined) return <div className="page-stack"><div className="loading-card">Opening packing list…</div></div>
+
+  const screenError = initState === 'error' ? initError : queryResult.error
+  if (screenError) {
+    return <div className="page-stack">
+      <div className="back-row"><button className="text-button" type="button" onClick={() => navigate(`/trip/${tripId}/more`)}>← Trip tools</button></div>
+      <PageIntro
+        eyebrow="Packing"
+        title="Packing couldn't open"
+        description={`${screenError} Your existing trip data has not been changed.`}
+        action={<div className="inline-actions"><button className="button button--secondary" type="button" onClick={() => navigate(`/trip/${tripId}/more`)}>Back to trip tools</button><button className="button button--primary" type="button" onClick={() => setInitAttempt((value) => value + 1)}>Retry</button></div>}
+      />
+    </div>
+  }
+
+  if (!data) return <div className="page-stack"><PageIntro eyebrow="Packing" title="Trip not found" description="This trip may have been deleted." action={<button className="button button--secondary" onClick={() => navigate('/trips')}>Back to trips</button>} /></div>
 
   const remove = async (item: PackingItem) => {
     if (!window.confirm(`Delete “${item.name}” from the packing list?`)) return

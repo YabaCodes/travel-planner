@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import PageIntro from '../../shared/components/PageIntro'
-import { packingService } from '../../data/services/packingService'
+import { packingService, type PackingItemEditorData } from '../../data/services/packingService'
 import './packing.css'
 
 interface FormState {
@@ -15,17 +15,62 @@ interface FormState {
   notes: string
 }
 
+interface EditorQueryResult {
+  value: PackingItemEditorData | null
+  error: string | null
+}
+
+type InitState = 'loading' | 'ready' | 'error'
+
 const emptyForm: FormState = { categoryId: '', name: '', quantity: '1', packedQuantity: '0', required: false, notes: '' }
+const errorMessage = (reason: unknown) => reason instanceof Error ? reason.message : 'Could not open the packing item.'
 
 function PackingItemEditorScreen() {
   const { tripId = '', itemId } = useParams()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const data = useLiveQuery(() => packingService.getItemEditorData(tripId, itemId), [tripId, itemId])
   const [form, setForm] = useState<FormState>(emptyForm)
   const [initializedKey, setInitializedKey] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [initState, setInitState] = useState<InitState>('loading')
+  const [initError, setInitError] = useState('')
+  const [initAttempt, setInitAttempt] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    setInitState('loading')
+    setInitError('')
+
+    packingService.initializePacking(tripId)
+      .then((found) => {
+        if (cancelled) return
+        if (!found) {
+          setInitError('This trip could not be found.')
+          setInitState('error')
+          return
+        }
+        setInitState('ready')
+      })
+      .catch((reason: unknown) => {
+        if (cancelled) return
+        setInitError(errorMessage(reason))
+        setInitState('error')
+      })
+
+    return () => { cancelled = true }
+  }, [initAttempt, tripId])
+
+  const queryResult = useLiveQuery<EditorQueryResult>(async () => {
+    if (initState !== 'ready') return { value: null, error: null }
+    try {
+      return { value: await packingService.getItemEditorData(tripId, itemId), error: null }
+    } catch (reason) {
+      return { value: null, error: errorMessage(reason) }
+    }
+  }, [initState, itemId, tripId])
+
+  const data = queryResult?.value ?? null
 
   useEffect(() => {
     if (!data) return
@@ -48,8 +93,22 @@ function PackingItemEditorScreen() {
     setInitializedKey(key)
   }, [data, initializedKey, itemId, searchParams, tripId])
 
-  if (data === undefined) return <div className="page-stack"><div className="loading-card">Opening packing item…</div></div>
-  if (data === null) return <div className="page-stack"><PageIntro eyebrow="Packing" title="Trip not found" description="This trip may have been deleted." action={<button className="button button--secondary" onClick={() => navigate('/trips')}>Back to trips</button>} /></div>
+  if (initState === 'loading' || queryResult === undefined) return <div className="page-stack"><div className="loading-card">Opening packing item…</div></div>
+
+  const screenError = initState === 'error' ? initError : queryResult.error
+  if (screenError) {
+    return <div className="page-stack">
+      <div className="back-row"><button className="text-button" type="button" onClick={() => navigate(`/trip/${tripId}/more/packing`)}>← Packing list</button></div>
+      <PageIntro
+        eyebrow="Packing"
+        title="Packing item couldn't open"
+        description={`${screenError} Your existing trip data has not been changed.`}
+        action={<div className="inline-actions"><button className="button button--secondary" type="button" onClick={() => navigate(`/trip/${tripId}/more`)}>Back to trip tools</button><button className="button button--primary" type="button" onClick={() => setInitAttempt((value) => value + 1)}>Retry</button></div>}
+      />
+    </div>
+  }
+
+  if (!data) return <div className="page-stack"><PageIntro eyebrow="Packing" title="Trip not found" description="This trip may have been deleted." action={<button className="button button--secondary" onClick={() => navigate('/trips')}>Back to trips</button>} /></div>
   if (itemId && !data.item) return <div className="page-stack"><PageIntro eyebrow="Packing" title="Item not found" description="This packing item may have been deleted." action={<button className="button button--secondary" onClick={() => navigate(`/trip/${tripId}/more/packing`)}>Back to packing</button>} /></div>
 
   const submit = async (event: FormEvent) => {

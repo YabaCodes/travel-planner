@@ -71,35 +71,39 @@ const createDefaultCategories = (listId: string): PackingCategory[] =>
     position: (index + 1) * 100,
   }))
 
-const ensurePackingList = async (tripId: string): Promise<PackingList> => {
-  const existing = active(await db.packingLists.where('trip_id').equals(tripId).toArray())
-    .sort((a, b) => a.created_at.localeCompare(b.created_at))[0]
-
-  if (existing) {
-    const categories = active(await db.packingCategories.where('packing_list_id').equals(existing.id).toArray())
-    if (categories.length === 0) await db.packingCategories.bulkAdd(createDefaultCategories(existing.id))
-    return existing
-  }
-
-  return db.transaction('rw', [db.packingLists, db.packingCategories], async () => {
-    const concurrent = active(await db.packingLists.where('trip_id').equals(tripId).toArray())
-      .sort((a, b) => a.created_at.localeCompare(b.created_at))[0]
-    if (concurrent) return concurrent
-
-    const list: PackingList = {
-      ...createRecordMetadata(),
-      trip_id: tripId,
-      title: 'Packing List',
-    }
-    await db.packingLists.add(list)
-    await db.packingCategories.bulkAdd(createDefaultCategories(list.id))
-    return list
-  })
-}
-
 const getTrip = async (tripId: string) => {
   const trip = await db.trips.get(tripId)
   return trip && !trip.deleted_at ? trip : null
+}
+
+const getPackingList = async (tripId: string): Promise<PackingList | null> => {
+  const lists = active(await db.packingLists.where('trip_id').equals(tripId).toArray())
+    .sort((a, b) => a.created_at.localeCompare(b.created_at))
+  return lists[0] ?? null
+}
+
+const ensurePackingList = async (tripId: string): Promise<PackingList> => {
+  const trip = await getTrip(tripId)
+  if (!trip) throw new Error('Trip not found.')
+
+  return db.transaction('rw', db.packingLists, db.packingCategories, async () => {
+    let list = await getPackingList(tripId)
+    if (!list) {
+      list = {
+        ...createRecordMetadata(),
+        trip_id: tripId,
+        title: 'Packing List',
+      }
+      await db.packingLists.add(list)
+    }
+
+    const categories = active(await db.packingCategories.where('packing_list_id').equals(list.id).toArray())
+    if (categories.length === 0) {
+      await db.packingCategories.bulkAdd(createDefaultCategories(list.id))
+    }
+
+    return list
+  })
 }
 
 const validateDraft = async (list: PackingList, draft: PackingItemDraft) => {
@@ -117,12 +121,26 @@ const validateDraft = async (list: PackingList, draft: PackingItemDraft) => {
   }
 }
 
+const categorySiblings = async (listId: string, categoryId: string) => {
+  const listItems = active(await db.packingItems.where('packing_list_id').equals(listId).toArray())
+  return listItems.filter((item) => item.category_id === categoryId)
+}
+
 export const packingService = {
+  async initializePacking(tripId: string): Promise<boolean> {
+    const trip = await getTrip(tripId)
+    if (!trip) return false
+    await ensurePackingList(tripId)
+    return true
+  },
+
   async getOverview(tripId: string): Promise<PackingOverview | null> {
     const trip = await getTrip(tripId)
     if (!trip) return null
 
-    const list = await ensurePackingList(tripId)
+    const list = await getPackingList(tripId)
+    if (!list) throw new Error('Packing list has not been initialized yet.')
+
     const [categoryRecords, itemRecords] = await Promise.all([
       db.packingCategories.where('packing_list_id').equals(list.id).toArray(),
       db.packingItems.where('packing_list_id').equals(list.id).toArray(),
@@ -160,7 +178,8 @@ export const packingService = {
   async getItemEditorData(tripId: string, itemId?: string): Promise<PackingItemEditorData | null> {
     const trip = await getTrip(tripId)
     if (!trip) return null
-    const list = await ensurePackingList(tripId)
+    const list = await getPackingList(tripId)
+    if (!list) throw new Error('Packing list has not been initialized yet.')
     const categories = active(await db.packingCategories.where('packing_list_id').equals(list.id).toArray()).sort((a, b) => a.position - b.position)
 
     if (!itemId) return { trip, list, categories, item: null }
@@ -170,11 +189,9 @@ export const packingService = {
   },
 
   async createItem(tripId: string, draft: PackingItemDraft): Promise<string> {
-    const trip = await getTrip(tripId)
-    if (!trip) throw new Error('Trip not found.')
     const list = await ensurePackingList(tripId)
     const validated = await validateDraft(list, draft)
-    const siblings = active(await db.packingItems.where('category_id').equals(validated.category.id).toArray())
+    const siblings = await categorySiblings(list.id, validated.category.id)
     const maxPosition = siblings.reduce((max, item) => Math.max(max, item.position), 0)
 
     const item: PackingItem = {
@@ -193,8 +210,6 @@ export const packingService = {
   },
 
   async updateItem(tripId: string, itemId: string, draft: PackingItemDraft) {
-    const trip = await getTrip(tripId)
-    if (!trip) throw new Error('Trip not found.')
     const list = await ensurePackingList(tripId)
     const item = await db.packingItems.get(itemId)
     if (!item || item.deleted_at || item.packing_list_id !== list.id) throw new Error('Packing item not found.')
@@ -202,7 +217,7 @@ export const packingService = {
     const validated = await validateDraft(list, draft)
     let position = item.position
     if (item.category_id !== validated.category.id) {
-      const siblings = active(await db.packingItems.where('category_id').equals(validated.category.id).toArray())
+      const siblings = await categorySiblings(list.id, validated.category.id)
       position = siblings.reduce((max, sibling) => Math.max(max, sibling.position), 0) + 100
     }
 
@@ -235,7 +250,7 @@ export const packingService = {
   },
 
   async resetPacked(tripId: string) {
-    const list = active(await db.packingLists.where('trip_id').equals(tripId).toArray())[0]
+    const list = await getPackingList(tripId)
     if (!list) return
     const items = active(await db.packingItems.where('packing_list_id').equals(list.id).toArray())
     const changed = items.filter((item) => item.packed_quantity !== 0).map((item) => touchRecord({ ...item, packed_quantity: 0 }))
