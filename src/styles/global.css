@@ -1619,3 +1619,158 @@ h2 {
   .places-controls { grid-template-columns: minmax(0,2fr) minmax(180px,1fr); align-items: end; }
   .place-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
+
+/* Milestone 6 · Transportation */
+.day-control-strip--transport {
+  grid-template-columns: repeat(2, minmax(0,1fr));
+}
+
+.transport-connector {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px minmax(0,1fr);
+  gap: 14px;
+  min-height: 72px;
+}
+
+.transport-connector__rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.transport-connector__rail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+
+.transport-connector__rail span {
+  position: relative;
+  z-index: 1;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.transport-card,
+.transport-add-button {
+  margin: 7px 0;
+  min-width: 0;
+  border-radius: 14px;
+}
+
+.transport-card {
+  padding: 13px 14px;
+  border: 1px solid #cfdcd5;
+  background: #f5f9f7;
+}
+
+.transport-card__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.transport-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.transport-card__badges span {
+  display: inline-flex;
+  min-height: 23px;
+  align-items: center;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #e9efec;
+  color: var(--ink-soft);
+  font-size: .64rem;
+  font-weight: 700;
+}
+
+.transport-card__badges .transport-mode {
+  background: var(--accent-soft);
+  color: var(--accent-mid);
+}
+
+.transport-card > strong {
+  display: block;
+  margin-top: 8px;
+  font-size: .76rem;
+}
+
+.transport-card p,
+.transport-card > small {
+  display: block;
+  margin: 5px 0 0;
+  color: var(--ink-soft);
+  font-size: .69rem;
+  line-height: 1.45;
+}
+
+.transport-card .inline-actions { gap: 7px; }
+.transport-card .text-button { font-size: .68rem; }
+
+.transport-add-button {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  text-align: left;
+  cursor: pointer;
+}
+
+.transport-add-button strong,
+.transport-add-button span { display: block; }
+.transport-add-button strong { color: var(--accent-mid); font-size: .73rem; }
+.transport-add-button span { margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .66rem; }
+
+.transport-route-preview {
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  gap: 10px;
+  align-items: center;
+  text-align: center;
+}
+
+.transport-route-preview span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.transport-route-preview strong { color: var(--accent-mid); }
+
+.transport-extra-section {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.transport-extra-section > div + div { margin-top: 8px; }
+
+@media (min-width: 680px) {
+  .day-control-strip--transport { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .transport-connector { grid-template-columns: 30px 112px minmax(0,1fr); }
+  .transport-connector__rail { grid-column: 1; }
+  .transport-card,
+  .transport-add-button { grid-column: 2 / -1; }
+}

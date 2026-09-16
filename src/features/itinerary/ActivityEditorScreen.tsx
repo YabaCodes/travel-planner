@@ -12,7 +12,7 @@ const typeOptions: Array<{ value: ActivityType; label: string; description: stri
   { value: 'custom', label: 'Custom', description: 'Attraction, experience, appointment, or anything else.' },
   { value: 'free_time', label: 'Free Time', description: 'Protect breathing room without deciding what to do yet.' },
   { value: 'meal', label: 'Meal', description: 'Breakfast, lunch, dinner, café, or food stop.' },
-  { value: 'transportation', label: 'Transfer', description: 'A travel block between places. Detailed routes arrive later.' },
+  { value: 'transportation', label: 'Transfer', description: 'Use when the journey itself belongs on the schedule; simple movement between stops can be added as transport on the day timeline.' },
   { value: 'booking', label: 'Booking', description: 'A scheduled reservation or ticketed activity.' },
 ]
 

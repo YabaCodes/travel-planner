@@ -93,6 +93,23 @@ const getActivePreferences = async (tripId: string) => {
   return preferences && !preferences.deleted_at ? preferences : null
 }
 
+const getLinkedTransportSegments = async (activityId: string) => {
+  const [fromSegments, toSegments] = await Promise.all([
+    db.transportSegments.where('from_activity_id').equals(activityId).toArray(),
+    db.transportSegments.where('to_activity_id').equals(activityId).toArray(),
+  ])
+  const unique = new Map([...fromSegments, ...toSegments].map((segment) => [segment.id, segment]))
+  return active([...unique.values()])
+}
+
+const getPlaceIdForTripPlace = async (tripPlaceId: string | null) => {
+  if (!tripPlaceId) return null
+  const tripPlace = await db.tripPlaces.get(tripPlaceId)
+  if (!tripPlace || tripPlace.deleted_at) return null
+  const place = await db.places.get(tripPlace.place_id)
+  return place && !place.deleted_at ? place.id : null
+}
+
 export const itineraryService = {
   async getOverview(tripId: string): Promise<ItineraryOverview | null> {
     const trip = await db.trips.get(tripId)
@@ -227,7 +244,7 @@ export const itineraryService = {
       position = targetActivities.length ? Math.max(...targetActivities.map((item) => item.position)) + 100 : 100
     }
 
-    await db.activities.put(touchRecord({
+    const nextActivity = touchRecord({
       ...activity,
       trip_day_id: targetDay.id,
       trip_place_id: draft.type === 'place' ? draft.tripPlaceId : null,
@@ -241,7 +258,31 @@ export const itineraryService = {
       time_locked: draft.timeLocked,
       position,
       notes: draft.notes?.trim() || null,
-    }))
+    })
+
+    const dayChanged = targetDay.id !== activity.trip_day_id
+    const placeChanged = nextActivity.trip_place_id !== activity.trip_place_id
+    if (!dayChanged && !placeChanged) {
+      await db.activities.put(nextActivity)
+      return
+    }
+
+    const linkedSegments = await getLinkedTransportSegments(activity.id)
+    const nextPlaceId = dayChanged ? null : await getPlaceIdForTripPlace(nextActivity.trip_place_id)
+    await db.transaction('rw', [db.activities, db.transportSegments], async () => {
+      await db.activities.put(nextActivity)
+      for (const segment of linkedSegments) {
+        if (dayChanged) {
+          await db.transportSegments.put(softDeleteRecord(segment))
+        } else {
+          await db.transportSegments.put(touchRecord({
+            ...segment,
+            from_place_id: segment.from_activity_id === activity.id ? nextPlaceId : segment.from_place_id,
+            to_place_id: segment.to_activity_id === activity.id ? nextPlaceId : segment.to_place_id,
+          }))
+        }
+      }
+    })
   },
 
   async duplicateActivity(activityId: string): Promise<string> {
@@ -263,7 +304,11 @@ export const itineraryService = {
   async softDeleteActivity(activityId: string) {
     const activity = await db.activities.get(activityId)
     if (!activity || activity.deleted_at) return
-    await db.activities.put(softDeleteRecord(activity))
+    const linkedSegments = await getLinkedTransportSegments(activityId)
+    await db.transaction('rw', [db.activities, db.transportSegments], async () => {
+      await db.activities.put(softDeleteRecord(activity))
+      for (const segment of linkedSegments) await db.transportSegments.put(softDeleteRecord(segment))
+    })
   },
 
   async setActivityStatus(activityId: string, status: ActivityStatus) {
@@ -281,7 +326,11 @@ export const itineraryService = {
 
     const targetActivities = orderedActivities(await db.activities.where('trip_day_id').equals(targetDayId).toArray())
     const position = targetActivities.length ? Math.max(...targetActivities.map((item) => item.position)) + 100 : 100
-    await db.activities.put(touchRecord({ ...activity, trip_day_id: targetDayId, position }))
+    const linkedSegments = await getLinkedTransportSegments(activityId)
+    await db.transaction('rw', [db.activities, db.transportSegments], async () => {
+      await db.activities.put(touchRecord({ ...activity, trip_day_id: targetDayId, position }))
+      for (const segment of linkedSegments) await db.transportSegments.put(softDeleteRecord(segment))
+    })
   },
 
   async moveActivityByOffset(activityId: string, offset: -1 | 1) {
