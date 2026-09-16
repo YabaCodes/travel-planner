@@ -16,6 +16,8 @@ import PlaceEditorScreen from './features/places/PlaceEditorScreen'
 import SchedulePlaceScreen from './features/places/SchedulePlaceScreen'
 import BookingsScreen from './features/bookings/BookingsScreen'
 import BookingEditorScreen from './features/bookings/BookingEditorScreen'
+import PackingScreen from './features/packing/PackingScreen'
+import PackingItemEditorScreen from './features/packing/PackingItemEditorScreen'
 
 function App() {
   return (
@@ -42,6 +44,9 @@ function App() {
           <Route path="/trip/:tripId/more/bookings" element={<BookingsScreen />} />
           <Route path="/trip/:tripId/more/bookings/new" element={<BookingEditorScreen />} />
           <Route path="/trip/:tripId/more/bookings/:bookingId/edit" element={<BookingEditorScreen />} />
+          <Route path="/trip/:tripId/more/packing" element={<PackingScreen />} />
+          <Route path="/trip/:tripId/more/packing/item/new" element={<PackingItemEditorScreen />} />
+          <Route path="/trip/:tripId/more/packing/item/:itemId/edit" element={<PackingItemEditorScreen />} />
           <Route path="*" element={<Navigate to="/trips" replace />} />
         </Route>
       </Routes>

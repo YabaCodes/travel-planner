@@ -2,11 +2,6 @@ import { useNavigate, useParams } from 'react-router-dom'
 import PageIntro from '../../shared/components/PageIntro'
 import MoreIcon from '../../shared/icons/MoreIcon'
 
-const futureTools = [
-  ['Packing', 'Prepare reusable, trip-specific packing lists.'],
-  ['Trip Info', 'Keep essential travel information accessible offline.'],
-]
-
 function MoreScreen() {
   const { tripId = '' } = useParams()
   const navigate = useNavigate()
@@ -38,16 +33,23 @@ function MoreScreen() {
           <MoreIcon />
         </button>
 
-        {futureTools.map(([name, description], index) => (
-          <article className="tool-row" key={name}>
-            <span className="tool-row__number">{String(index + 3).padStart(2, '0')}</span>
-            <div>
-              <h2>{name}</h2>
-              <p>{description}</p>
-            </div>
-            <MoreIcon />
-          </article>
-        ))}
+        <button className="tool-row tool-row--interactive" type="button" onClick={() => navigate(`/trip/${tripId}/more/packing`)}>
+          <span className="tool-row__number">03</span>
+          <div>
+            <h2>Packing</h2>
+            <p>Build an offline checklist, track quantities, and see what required items are still missing.</p>
+          </div>
+          <MoreIcon />
+        </button>
+
+        <article className="tool-row">
+          <span className="tool-row__number">04</span>
+          <div>
+            <h2>Trip Info</h2>
+            <p>Keep essential travel information accessible offline.</p>
+          </div>
+          <MoreIcon />
+        </article>
       </section>
     </div>
   )
