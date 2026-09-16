@@ -5,7 +5,8 @@ import PageIntro from '../../shared/components/PageIntro'
 import PlusIcon from '../../shared/icons/PlusIcon'
 import { itineraryService } from '../../data/services/itineraryService'
 import { transportService, type TransportSegmentView } from '../../data/services/transportService'
-import type { Activity, ActivityStatus } from '../../data/types/entities'
+import { bookingService } from '../../data/services/bookingService'
+import type { Activity, ActivityStatus, Booking } from '../../data/types/entities'
 import { endTimeForActivity, findActivityOverlaps, formatClockTime, formatDuration } from '../../data/utils/activityTime'
 import { formatShortDate } from '../../data/utils/tripDate'
 
@@ -17,13 +18,17 @@ function TripDayScreen() {
   const navigate = useNavigate()
   const planner = useLiveQuery(async () => {
     const day = await itineraryService.getDay(tripId, dayId)
-    if (!day) return { day: null, transport: { segments: [], totalMinutes: 0 } }
-    const transport = await transportService.getDaySegments(tripId, dayId)
-    return { day, transport }
+    if (!day) return { day: null, transport: { segments: [], totalMinutes: 0 }, bookings: {} as Record<string, Booking[]> }
+    const [transport, bookings] = await Promise.all([
+      transportService.getDaySegments(tripId, dayId),
+      bookingService.getActivityBookingMap(tripId),
+    ])
+    return { day, transport, bookings }
   }, [tripId, dayId])
 
   const data = planner?.day ?? null
   const transport = planner?.transport ?? { segments: [], totalMinutes: 0 }
+  const bookingMap: Record<string, Booking[]> = planner?.bookings ?? {}
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
   const [destinationId, setDestinationId] = useState('')
@@ -150,14 +155,26 @@ function TripDayScreen() {
             const hasOverlap = overlapIds.has(activity.id)
             const nextActivity = data.activities[index + 1]
             const connection = nextActivity ? segmentsByPair.get(segmentKey(activity.id, nextActivity.id)) : null
+            const activityBookings = bookingMap[activity.id] ?? []
+            const liveBookings = activityBookings.filter((booking) => booking.status !== 'cancelled')
+            const bookedCount = liveBookings.filter((booking) => booking.status === 'booked').length
+            const toBookCount = liveBookings.filter((booking) => booking.status === 'to_book').length
+            const bookingState = bookedCount ? 'booked' : toBookCount ? 'to_book' : activity.booking_requirement
+            const showBookingState = liveBookings.length > 0 || activity.booking_requirement !== 'none'
+            const openBooking = () => {
+              if (liveBookings.length === 1) navigate(`/trip/${tripId}/more/bookings/${liveBookings[0].id}/edit`)
+              else if (liveBookings.length > 1) navigate(`/trip/${tripId}/more/bookings?activityId=${activity.id}`)
+              else navigate(`/trip/${tripId}/more/bookings/new?activityId=${activity.id}`)
+            }
             return <Fragment key={activity.id}>
               <article className={`activity-card${hasOverlap ? ' has-conflict' : ''}${activity.status === 'completed' ? ' is-complete' : ''}`}>
                 <div className="activity-card__rail"><span className="activity-card__dot" /><span className="activity-card__line" /></div>
                 <div className="activity-card__time"><strong>{formatClockTime(activity.start_time)}</strong>{end ? <small>to {end.replace('+1', ' +1d')}</small> : <small>{formatDuration(activity.duration_minutes)}</small>}</div>
                 <div className="activity-card__body">
-                  <div className="activity-card__topline"><div className="activity-badges"><span className="activity-type">{titleCase(activity.type)}</span><span className={`priority-pill priority-pill--${activity.priority}`}>{titleCase(activity.priority)}</span>{activity.time_locked ? <span className="lock-pill">Locked</span> : null}{hasOverlap ? <span className="conflict-pill">Overlap</span> : null}</div><details className="activity-menu"><summary aria-label={`Actions for ${activity.title}`}>•••</summary><div className="activity-menu__popover"><button type="button" onClick={() => navigate(`/trip/${tripId}/itinerary/day/${dayId}/activity/${activity.id}/edit`)}>Edit</button><button type="button" onClick={() => duplicate(activity)}>Duplicate</button><button type="button" disabled={index === 0} onClick={() => itineraryService.moveActivityByOffset(activity.id, -1)}>Move up</button><button type="button" disabled={index === data.activities.length - 1} onClick={() => itineraryService.moveActivityByOffset(activity.id, 1)}>Move down</button><button className="danger-text" type="button" onClick={() => remove(activity)}>Delete</button></div></details></div>
+                  <div className="activity-card__topline"><div className="activity-badges"><span className="activity-type">{titleCase(activity.type)}</span><span className={`priority-pill priority-pill--${activity.priority}`}>{titleCase(activity.priority)}</span>{activity.time_locked ? <span className="lock-pill">Locked</span> : null}{hasOverlap ? <span className="conflict-pill">Overlap</span> : null}{showBookingState ? <span className={`activity-booking-pill activity-booking-pill--${bookingState}`}>{bookingState === 'booked' ? 'Booked' : bookingState === 'to_book' ? 'To book' : bookingState === 'required' ? 'Booking required' : 'Booking recommended'}</span> : null}</div><details className="activity-menu"><summary aria-label={`Actions for ${activity.title}`}>•••</summary><div className="activity-menu__popover"><button type="button" onClick={() => navigate(`/trip/${tripId}/itinerary/day/${dayId}/activity/${activity.id}/edit`)}>Edit</button><button type="button" onClick={() => duplicate(activity)}>Duplicate</button><button type="button" disabled={index === 0} onClick={() => itineraryService.moveActivityByOffset(activity.id, -1)}>Move up</button><button type="button" disabled={index === data.activities.length - 1} onClick={() => itineraryService.moveActivityByOffset(activity.id, 1)}>Move down</button><button className="danger-text" type="button" onClick={() => remove(activity)}>Delete</button></div></details></div>
                   <h2>{activity.title}</h2>
                   <p>{activity.notes || formatDuration(activity.duration_minutes)}</p>
+                  {showBookingState ? <div className="activity-booking-row"><div><span>Reservation</span><strong>{bookedCount ? `${bookedCount} booked` : toBookCount ? `${toBookCount} to book` : activity.booking_requirement === 'required' ? 'Required · not tracked yet' : 'Recommended · not tracked yet'}</strong></div><button className="text-button" type="button" onClick={openBooking}>{liveBookings.length ? 'Manage' : 'Track booking'}</button></div> : null}
                   <div className="activity-card__controls">
                     <label><span>Status</span><select value={activity.status} onChange={(event) => setStatus(activity, event.target.value as ActivityStatus)}><option value="planned">Planned</option><option value="in_progress">In progress</option><option value="completed">Completed</option><option value="skipped">Skipped</option><option value="cancelled">Cancelled</option></select></label>
                     <label><span>Move to</span><select value={activity.trip_day_id} onChange={(event) => moveDay(activity, event.target.value)}>{data.allDays.map((day) => <option key={day.id} value={day.id}>Day {day.day_number} · {formatShortDate(day.date)}</option>)}</select></label>

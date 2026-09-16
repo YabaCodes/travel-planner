@@ -3,7 +3,6 @@ import PageIntro from '../../shared/components/PageIntro'
 import MoreIcon from '../../shared/icons/MoreIcon'
 
 const futureTools = [
-  ['Bookings', 'Track reservations, confirmations, and deadlines.'],
   ['Packing', 'Prepare reusable, trip-specific packing lists.'],
   ['Trip Info', 'Keep essential travel information accessible offline.'],
 ]
@@ -30,9 +29,18 @@ function MoreScreen() {
           <MoreIcon />
         </button>
 
+        <button className="tool-row tool-row--interactive" type="button" onClick={() => navigate(`/trip/${tripId}/more/bookings`)}>
+          <span className="tool-row__number">02</span>
+          <div>
+            <h2>Bookings</h2>
+            <p>Track reservations, confirmations, costs, links, and booking or cancellation deadlines.</p>
+          </div>
+          <MoreIcon />
+        </button>
+
         {futureTools.map(([name, description], index) => (
           <article className="tool-row" key={name}>
-            <span className="tool-row__number">{String(index + 2).padStart(2, '0')}</span>
+            <span className="tool-row__number">{String(index + 3).padStart(2, '0')}</span>
             <div>
               <h2>{name}</h2>
               <p>{description}</p>

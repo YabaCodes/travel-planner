@@ -52,7 +52,7 @@ function TripDashboardScreen() {
       <section className="dashboard-grid">
         <button className="dashboard-card" type="button" onClick={() => navigate(`/trip/${tripId}/itinerary`)}><span>Itinerary</span><strong>{data.counts.activities} activities</strong><small>{data.days.length ? `${data.days.length} days ready to plan` : 'Set dates to generate trip days'}</small></button>
         <button className="dashboard-card" type="button" onClick={() => navigate(`/trip/${tripId}/more`)}><span>Places</span><strong>{data.counts.places} saved</strong><small>Ideas and scheduled places will live here.</small></button>
-        <button className="dashboard-card" type="button" onClick={() => navigate(`/trip/${tripId}/more`)}><span>Bookings</span><strong>{data.counts.bookings} records</strong><small>Flights, hotels, attractions, and reservations.</small></button>
+        <button className="dashboard-card" type="button" onClick={() => navigate(`/trip/${tripId}/more/bookings`)}><span>Bookings</span><strong>{data.counts.bookings} records</strong><small>Reservations, confirmations, costs, and deadlines.</small></button>
         <button className="dashboard-card" type="button" onClick={() => navigate(`/trip/${tripId}/more`)}><span>Packing</span><strong>{data.counts.packingItems} items</strong><small>Offline packing lists arrive in the next feature milestones.</small></button>
       </section>
 

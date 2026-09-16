@@ -304,10 +304,14 @@ export const itineraryService = {
   async softDeleteActivity(activityId: string) {
     const activity = await db.activities.get(activityId)
     if (!activity || activity.deleted_at) return
-    const linkedSegments = await getLinkedTransportSegments(activityId)
-    await db.transaction('rw', [db.activities, db.transportSegments], async () => {
+    const [linkedSegments, linkedBookings] = await Promise.all([
+      getLinkedTransportSegments(activityId),
+      db.bookings.where('activity_id').equals(activityId).toArray().then(active),
+    ])
+    await db.transaction('rw', [db.activities, db.transportSegments, db.bookings], async () => {
       await db.activities.put(softDeleteRecord(activity))
       for (const segment of linkedSegments) await db.transportSegments.put(softDeleteRecord(segment))
+      for (const booking of linkedBookings) await db.bookings.put(touchRecord({ ...booking, activity_id: null }))
     })
   },
 
