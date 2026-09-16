@@ -40,9 +40,15 @@ jobs:
       - name: Commit validated Milestone 2
         shell: bash
         run: |
-          rm -f .github/workflows/apply-milestone-2.yml
+          # Workflow files cannot be changed by the GitHub Actions token in this repo.
+          # Restore the existing deployment workflow and commit only application/data files.
+          git checkout -- .github/workflows/deploy-pages.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
+          if git diff --cached --quiet; then
+            echo "No Milestone 2 application changes to commit."
+            exit 0
+          fi
           git commit -m "Add Travel Planner Milestone 2 data foundation"
           git push
