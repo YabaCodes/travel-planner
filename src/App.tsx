@@ -23,6 +23,7 @@ import TravelLegEditorScreen from './features/travel-legs/TravelLegEditorScreen'
 import TripInfoScreen from './features/trip-info/TripInfoScreen'
 import TripInfoSectionEditorScreen from './features/trip-info/TripInfoSectionEditorScreen'
 import TripInfoItemEditorScreen from './features/trip-info/TripInfoItemEditorScreen'
+import DataBackupScreen from './features/backup/DataBackupScreen'
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
           <Route index element={<Navigate to="/trips" replace />} />
           <Route path="/trips" element={<TripsScreen />} />
           <Route path="/trips/new" element={<TripWizardScreen />} />
+          <Route path="/data" element={<DataBackupScreen />} />
           <Route path="/trip/:tripId" element={<TripDashboardScreen />} />
           <Route path="/trip/:tripId/edit" element={<TripEditScreen />} />
           <Route path="/trip/:tripId/itinerary" element={<ItineraryScreen />} />

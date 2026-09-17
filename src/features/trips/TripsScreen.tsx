@@ -36,10 +36,10 @@ function TripsScreen() {
         eyebrow="Your travel workspace"
         title="My Trips"
         description="Plan, prepare, and travel from one reusable workspace. Each trip keeps its own itinerary, preferences, bookings, packing, and essential information."
-        action={<button className="button button--primary" type="button" onClick={() => navigate('/trips/new')}><PlusIcon />New Trip</button>}
+        action={<div className="inline-actions"><button className="button button--secondary" type="button" onClick={() => navigate('/data')}>Data & Backup</button><button className="button button--primary" type="button" onClick={() => navigate('/trips/new')}><PlusIcon />New Trip</button></div>}
       />
 
-      <div className="status-banner" role="status"><span className="status-banner__dot" />Local-first storage is active. Trips you create here are saved on this device and remain available offline.</div>
+      <div className="status-banner" role="status"><span className="status-banner__dot" />Local-first storage is active. Trips remain available offline on this device; use Data & Backup to keep a recoverable copy outside the browser.</div>
 
       {summaries === undefined ? <div className="loading-card">Loading your trips…</div> : null}
 

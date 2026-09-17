@@ -16,48 +16,22 @@ function MoreScreen() {
 
       <section className="tool-list" aria-label="Trip tools">
         <button className="tool-row tool-row--interactive" type="button" onClick={() => navigate(`/trip/${tripId}/more/places`)}>
-          <span className="tool-row__number">01</span>
-          <div>
-            <h2>Places</h2>
-            <p>Save ideas, organize priorities, and schedule them into the itinerary when you are ready.</p>
-          </div>
-          <MoreIcon />
+          <span className="tool-row__number">01</span><div><h2>Places</h2><p>Save ideas, organize priorities, and schedule them into the itinerary when you are ready.</p></div><MoreIcon />
         </button>
-
         <button className="tool-row tool-row--interactive" type="button" onClick={() => navigate(`/trip/${tripId}/more/bookings`)}>
-          <span className="tool-row__number">02</span>
-          <div>
-            <h2>Bookings</h2>
-            <p>Track reservations, confirmations, costs, links, and booking or cancellation deadlines.</p>
-          </div>
-          <MoreIcon />
+          <span className="tool-row__number">02</span><div><h2>Bookings</h2><p>Track reservations, confirmations, costs, links, and booking or cancellation deadlines.</p></div><MoreIcon />
         </button>
-
         <button className="tool-row tool-row--interactive" type="button" onClick={() => navigate(`/trip/${tripId}/more/packing`)}>
-          <span className="tool-row__number">03</span>
-          <div>
-            <h2>Packing</h2>
-            <p>Build an offline checklist, track quantities, and see what required items are still missing.</p>
-          </div>
-          <MoreIcon />
+          <span className="tool-row__number">03</span><div><h2>Packing</h2><p>Build an offline checklist, track quantities, and see what required items are still missing.</p></div><MoreIcon />
         </button>
-
         <button className="tool-row tool-row--interactive" type="button" onClick={() => navigate(`/trip/${tripId}/more/travel-legs`)}>
-          <span className="tool-row__number">04</span>
-          <div>
-            <h2>Travel Legs</h2>
-            <p>Track flights, inter-city trains, ferries, long-distance transfers, and other major movement between trip stops.</p>
-          </div>
-          <MoreIcon />
+          <span className="tool-row__number">04</span><div><h2>Travel Legs</h2><p>Track flights, inter-city trains, ferries, long-distance transfers, and other major movement between trip stops.</p></div><MoreIcon />
         </button>
-
         <button className="tool-row tool-row--interactive" type="button" onClick={() => navigate(`/trip/${tripId}/more/trip-info`)}>
-          <span className="tool-row__number">05</span>
-          <div>
-            <h2>Trip Info</h2>
-            <p>Keep essential contacts, addresses, references, documents, links, and notes accessible offline in flexible sections.</p>
-          </div>
-          <MoreIcon />
+          <span className="tool-row__number">05</span><div><h2>Trip Info</h2><p>Keep essential contacts, addresses, references, documents, links, and notes accessible offline in flexible sections.</p></div><MoreIcon />
+        </button>
+        <button className="tool-row tool-row--interactive" type="button" onClick={() => navigate('/data')}>
+          <span className="tool-row__number">06</span><div><h2>Data & Backup</h2><p>Export a full JSON backup, validate and restore backups, and check local storage persistence.</p></div><MoreIcon />
         </button>
       </section>
     </div>
