@@ -1,0 +1,151 @@
+.travel-legs-page,
+.travel-leg-editor-page {
+  padding-bottom: 32px;
+}
+
+.travel-leg-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.travel-leg-summary > div {
+  min-height: 84px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  display: grid;
+  align-content: center;
+  gap: 6px;
+}
+
+.travel-leg-summary span,
+.travel-leg-meta span {
+  color: var(--ink-soft);
+  font-size: 0.74rem;
+}
+
+.travel-leg-summary strong {
+  font-size: 1.25rem;
+}
+
+.travel-leg-stack {
+  display: grid;
+  gap: 15px;
+}
+
+.travel-leg-card,
+.travel-leg-editor-card,
+.travel-leg-empty {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow);
+}
+
+.travel-leg-card__topline,
+.travel-leg-card__badges,
+.travel-leg-card__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.travel-leg-card__topline {
+  justify-content: space-between;
+}
+
+.travel-leg-mode,
+.travel-leg-booking {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-size: 0.68rem;
+  font-weight: 760;
+}
+
+.travel-leg-booking {
+  background: #f4e8d7;
+  color: #80571f;
+}
+
+.travel-leg-booking--booked {
+  background: #e6f2e9;
+  color: #2f6b3b;
+}
+
+.travel-leg-card h2 {
+  margin: 16px 0 6px;
+  font-size: 1.2rem;
+}
+
+.travel-leg-card__linked,
+.travel-leg-card__notes {
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.travel-leg-card__linked {
+  margin: 0 0 16px;
+  font-size: 0.82rem;
+}
+
+.travel-leg-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.travel-leg-meta > div {
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+  display: grid;
+  gap: 5px;
+}
+
+.travel-leg-meta strong {
+  font-size: 0.86rem;
+}
+
+.travel-leg-card__notes {
+  margin: 14px 0 0;
+  white-space: pre-wrap;
+}
+
+.travel-leg-card__actions {
+  margin-top: 16px;
+}
+
+.travel-leg-empty {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+}
+
+.travel-leg-empty h2 {
+  margin-bottom: 8px;
+}
+
+.travel-leg-empty p {
+  max-width: 620px;
+  margin-bottom: 20px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+@media (min-width: 720px) {
+  .travel-leg-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .travel-leg-meta {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

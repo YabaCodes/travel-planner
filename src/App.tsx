@@ -18,6 +18,11 @@ import BookingsScreen from './features/bookings/BookingsScreen'
 import BookingEditorScreen from './features/bookings/BookingEditorScreen'
 import PackingScreen from './features/packing/PackingScreen'
 import PackingItemEditorScreen from './features/packing/PackingItemEditorScreen'
+import TravelLegsScreen from './features/travel-legs/TravelLegsScreen'
+import TravelLegEditorScreen from './features/travel-legs/TravelLegEditorScreen'
+import TripInfoScreen from './features/trip-info/TripInfoScreen'
+import TripInfoSectionEditorScreen from './features/trip-info/TripInfoSectionEditorScreen'
+import TripInfoItemEditorScreen from './features/trip-info/TripInfoItemEditorScreen'
 
 function App() {
   return (
@@ -47,6 +52,14 @@ function App() {
           <Route path="/trip/:tripId/more/packing" element={<PackingScreen />} />
           <Route path="/trip/:tripId/more/packing/item/new" element={<PackingItemEditorScreen />} />
           <Route path="/trip/:tripId/more/packing/item/:itemId/edit" element={<PackingItemEditorScreen />} />
+          <Route path="/trip/:tripId/more/travel-legs" element={<TravelLegsScreen />} />
+          <Route path="/trip/:tripId/more/travel-legs/new" element={<TravelLegEditorScreen />} />
+          <Route path="/trip/:tripId/more/travel-legs/:travelLegId/edit" element={<TravelLegEditorScreen />} />
+          <Route path="/trip/:tripId/more/trip-info" element={<TripInfoScreen />} />
+          <Route path="/trip/:tripId/more/trip-info/section/new" element={<TripInfoSectionEditorScreen />} />
+          <Route path="/trip/:tripId/more/trip-info/section/:sectionId/edit" element={<TripInfoSectionEditorScreen />} />
+          <Route path="/trip/:tripId/more/trip-info/item/new" element={<TripInfoItemEditorScreen />} />
+          <Route path="/trip/:tripId/more/trip-info/item/:itemId/edit" element={<TripInfoItemEditorScreen />} />
           <Route path="*" element={<Navigate to="/trips" replace />} />
         </Route>
       </Routes>

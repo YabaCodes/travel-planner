@@ -20,6 +20,7 @@ function BookingEditorScreen() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const requestedActivityId = searchParams.get('activityId')
+  const requestedTravelLegId = searchParams.get('travelLegId')
   const data = useLiveQuery(() => bookingService.getEditorData(tripId, bookingId), [tripId, bookingId])
 
   const [initializedFor, setInitializedFor] = useState('')
@@ -40,10 +41,11 @@ function BookingEditorScreen() {
   const [error, setError] = useState('')
 
   const requestedActivity = useMemo(() => data?.activities.find((item) => item.activity.id === requestedActivityId) ?? null, [data, requestedActivityId])
+  const requestedTravelLeg = useMemo(() => data?.travelLegs.find((item) => item.travelLeg.id === requestedTravelLegId) ?? null, [data, requestedTravelLegId])
 
   useEffect(() => {
     if (!data) return
-    const key = bookingId ? `${bookingId}:${data.booking?.revision ?? 'missing'}` : `new:${requestedActivityId ?? 'none'}`
+    const key = bookingId ? `${bookingId}:${data.booking?.revision ?? 'missing'}` : `new:${requestedActivityId ?? 'none'}:${requestedTravelLegId ?? 'none'}`
     if (initializedFor === key) return
 
     if (data.booking) {
@@ -81,13 +83,19 @@ function BookingEditorScreen() {
         const dayDate = requestedActivity.day?.date
         const startTime = requestedActivity.activity.start_time
         if (dayDate && startTime) setDateTime(`${dayDate}T${startTime}`)
+      } else if (requestedTravelLeg) {
+        setType(requestedTravelLeg.travelLeg.mode === 'flight' ? 'flight' : 'transport')
+        setLinkType('travel_leg')
+        setLinkId(requestedTravelLeg.travelLeg.id)
+        if (requestedTravelLeg.travelLeg.departure_at) setDateTime(requestedTravelLeg.travelLeg.departure_at)
+        if (requestedTravelLeg.travelLeg.operator) setProvider(requestedTravelLeg.travelLeg.operator)
       } else {
         setLinkType('none')
         setLinkId('')
       }
     }
     setInitializedFor(key)
-  }, [bookingId, data, initializedFor, requestedActivity, requestedActivityId])
+  }, [bookingId, data, initializedFor, requestedActivity, requestedActivityId, requestedTravelLeg, requestedTravelLegId])
 
   if (data === undefined) return <div className="page-stack"><div className="loading-card">Opening booking editor…</div></div>
   if (data === null) return <div className="page-stack"><PageIntro eyebrow="Booking Center" title="Booking not found" description="This booking or trip may have been deleted." action={<button className="button button--secondary" onClick={() => navigate(`/trip/${tripId}/more/bookings`)}>Back to bookings</button>} /></div>

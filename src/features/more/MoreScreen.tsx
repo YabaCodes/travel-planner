@@ -42,14 +42,23 @@ function MoreScreen() {
           <MoreIcon />
         </button>
 
-        <article className="tool-row">
+        <button className="tool-row tool-row--interactive" type="button" onClick={() => navigate(`/trip/${tripId}/more/travel-legs`)}>
           <span className="tool-row__number">04</span>
           <div>
-            <h2>Trip Info</h2>
-            <p>Keep essential travel information accessible offline.</p>
+            <h2>Travel Legs</h2>
+            <p>Track flights, inter-city trains, ferries, long-distance transfers, and other major movement between trip stops.</p>
           </div>
           <MoreIcon />
-        </article>
+        </button>
+
+        <button className="tool-row tool-row--interactive" type="button" onClick={() => navigate(`/trip/${tripId}/more/trip-info`)}>
+          <span className="tool-row__number">05</span>
+          <div>
+            <h2>Trip Info</h2>
+            <p>Keep essential contacts, addresses, references, documents, links, and notes accessible offline in flexible sections.</p>
+          </div>
+          <MoreIcon />
+        </button>
       </section>
     </div>
   )
