@@ -24,6 +24,7 @@ import TripInfoScreen from './features/trip-info/TripInfoScreen'
 import TripInfoSectionEditorScreen from './features/trip-info/TripInfoSectionEditorScreen'
 import TripInfoItemEditorScreen from './features/trip-info/TripInfoItemEditorScreen'
 import DataBackupScreen from './features/backup/DataBackupScreen'
+import NotFoundScreen from './features/system/NotFoundScreen'
 
 function App() {
   return (
@@ -62,7 +63,7 @@ function App() {
           <Route path="/trip/:tripId/more/trip-info/section/:sectionId/edit" element={<TripInfoSectionEditorScreen />} />
           <Route path="/trip/:tripId/more/trip-info/item/new" element={<TripInfoItemEditorScreen />} />
           <Route path="/trip/:tripId/more/trip-info/item/:itemId/edit" element={<TripInfoItemEditorScreen />} />
-          <Route path="*" element={<Navigate to="/trips" replace />} />
+          <Route path="*" element={<NotFoundScreen />} />
         </Route>
       </Routes>
     </HashRouter>

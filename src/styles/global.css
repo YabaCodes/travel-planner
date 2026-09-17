@@ -1947,3 +1947,71 @@ button.bookings-summary__item { cursor: pointer; }
   .booking-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .booking-editor-card { padding: 26px; }
 }
+
+/* Milestone 13 · accessibility and recovery polish */
+:where(button, a, input, textarea, select, summary):focus-visible {
+  outline: 3px solid rgba(53, 106, 82, .32);
+  outline-offset: 3px;
+}
+
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+
+.fatal-app-shell {
+  min-height: 100vh;
+  padding: max(28px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
+  display: grid;
+  place-items: center;
+}
+
+.fatal-app-card {
+  width: min(100%, 650px);
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,.92);
+  box-shadow: var(--shadow);
+}
+
+.fatal-app-card h1 {
+  margin-bottom: 14px;
+  font-size: clamp(1.8rem, 7vw, 2.6rem);
+}
+
+.fatal-app-card > p {
+  color: var(--ink-soft);
+  line-height: 1.65;
+}
+
+.fatal-app-detail {
+  margin: 18px 0;
+  padding: 13px 14px;
+  border-radius: 13px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-size: .78rem;
+}
+
+.fatal-app-detail summary {
+  cursor: pointer;
+  font-weight: 720;
+}
+
+.fatal-app-detail code {
+  display: block;
+  margin-top: 10px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

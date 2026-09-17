@@ -24,7 +24,7 @@ export default defineConfig({
         theme_color: '#16231f',
         background_color: '#f5f4ef',
         display: 'standalone',
-        orientation: 'portrait-primary',
+        orientation: 'any',
         start_url: '.',
         scope: '.',
         icons: [
@@ -49,6 +49,9 @@ export default defineConfig({
       workbox: {
         navigateFallback: 'index.html',
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
       },
     }),
   ],

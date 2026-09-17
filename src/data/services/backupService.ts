@@ -79,6 +79,14 @@ export interface StorageHealth {
   quota: number | null
 }
 
+export interface IntegrityCheckResult {
+  ok: true
+  checkedAt: string
+  totalRecords: number
+  tableCount: number
+  activeTrips: number
+}
+
 const emptyTables = (): BackupTables => Object.fromEntries(BACKUP_TABLE_NAMES.map((name) => [name, []])) as unknown as BackupTables
 const emptyCounts = (): Record<BackupTableName, number> => Object.fromEntries(BACKUP_TABLE_NAMES.map((name) => [name, 0])) as Record<BackupTableName, number>
 
@@ -300,6 +308,18 @@ export const backupService = {
     const updated = BACKUP_TABLE_NAMES.reduce((sum, name) => sum + perTable[name].updated, 0)
     const skipped = BACKUP_TABLE_NAMES.reduce((sum, name) => sum + perTable[name].skipped, 0)
     return { mode, created, updated, skipped, errors: 0, total: created + updated + skipped, perTable }
+  },
+
+  async runIntegrityCheck(): Promise<IntegrityCheckResult> {
+    const backup = await this.createBackup()
+    const validated = validateBackupObject(backup)
+    return {
+      ok: true,
+      checkedAt: new Date().toISOString(),
+      totalRecords: validated.totalRecords,
+      tableCount: BACKUP_TABLE_NAMES.length,
+      activeTrips: validated.tables.trips.filter((record) => record.deleted_at === null || record.deleted_at === undefined).length,
+    }
   },
 
   async getStorageHealth(): Promise<StorageHealth> {

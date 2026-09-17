@@ -231,3 +231,41 @@
     padding-right: 64px;
   }
 }
+
+/* Milestone 13 · runtime/offline hardening */
+.runtime-status {
+  width: min(100%, var(--content-max));
+  margin: 0 auto 18px;
+  padding: 13px 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: .82rem;
+  line-height: 1.45;
+}
+
+.runtime-status--offline {
+  border-color: #dfc69d;
+  background: #f7efe1;
+  color: #715326;
+}
+
+.runtime-status__dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--warning);
+  box-shadow: 0 0 0 5px rgba(162, 110, 42, .1);
+  flex: 0 0 auto;
+}
+
+.runtime-status strong,
+.runtime-status span {
+  display: block;
+}
+
+.runtime-status strong { margin-bottom: 2px; }
+.runtime-status span { color: inherit; opacity: .86; }

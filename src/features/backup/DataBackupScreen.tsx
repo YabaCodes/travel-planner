@@ -8,6 +8,7 @@ import {
   type RestoreMode,
   type RestoreResult,
   type StorageHealth,
+  type IntegrityCheckResult,
 } from '../../data/services/backupService'
 import './backup.css'
 
@@ -36,6 +37,7 @@ function DataBackupScreen() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const overview = useLiveQuery(() => backupService.getOverview(), [])
   const [storage, setStorage] = useState<StorageHealth | null>(null)
+  const [integrity, setIntegrity] = useState<IntegrityCheckResult | null>(null)
   const [preview, setPreview] = useState<BackupPreview | null>(null)
   const [selectedFileName, setSelectedFileName] = useState('')
   const [restoreMode, setRestoreMode] = useState<RestoreMode>('replace')
@@ -119,6 +121,22 @@ function DataBackupScreen() {
     }
   }
 
+  const runIntegrityCheck = async () => {
+    setBusy(true)
+    setError('')
+    setMessage('')
+    try {
+      const check = await backupService.runIntegrityCheck()
+      setIntegrity(check)
+      setMessage(`Integrity check passed across ${check.tableCount} tables and ${check.totalRecords} records.`)
+    } catch (cause) {
+      setIntegrity(null)
+      setError(cause instanceof Error ? `Integrity check failed: ${cause.message}` : 'Integrity check failed.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const requestPersistence = async () => {
     setBusy(true)
     setError('')
@@ -165,6 +183,16 @@ function DataBackupScreen() {
           <div><span>App version</span><strong>{overview?.appVersion ?? '…'}</strong></div>
         </div>
         {storage?.persisted !== true ? <div className="backup-inline-actions"><button className="button button--secondary" type="button" disabled={busy} onClick={requestPersistence}>Request persistent storage</button><small>The browser decides whether this request can be granted.</small></div> : null}
+      </section>
+
+      <section className="backup-card">
+        <div className="backup-section-heading">
+          <div><span className="eyebrow">System check</span><h2>Verify local data integrity</h2></div>
+          <span className={`backup-health-pill ${integrity?.ok ? 'is-good' : ''}`}>{integrity?.ok ? 'Healthy' : 'Ready'}</span>
+        </div>
+        <p className="backup-copy">Runs a read-only relationship check across all 18 database tables. It verifies that linked trips, days, places, activities, bookings, travel legs, packing records, and Trip Info records still point to records that exist.</p>
+        {integrity ? <div className="backup-metrics backup-metrics--compact"><div><span>Records checked</span><strong>{integrity.totalRecords}</strong></div><div><span>Tables</span><strong>{integrity.tableCount}</strong></div><div><span>Active trips</span><strong>{integrity.activeTrips}</strong></div></div> : null}
+        <div className="backup-actions"><button className="button button--secondary" type="button" disabled={busy} onClick={runIntegrityCheck}>{busy ? 'Checking…' : integrity ? 'Run check again' : 'Run integrity check'}</button>{integrity ? <small>Last passed {formatExportDate(integrity.checkedAt)}</small> : <small>This check does not modify your data.</small>}</div>
       </section>
 
       <section className="backup-card">

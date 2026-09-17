@@ -17,7 +17,7 @@ function SidebarNavigation({ tripId }: SidebarNavigationProps) {
         <NavLink to={`/trip/${tripId}/today`} className={activeClass}><TodayIcon /><span>Today</span></NavLink>
         <NavLink to={`/trip/${tripId}/more`} className={activeClass}><MoreIcon /><span>More</span></NavLink>
       </> : <div className="sidebar-hint">Open a trip to unlock itinerary, today, and trip tools.</div>}
-      <div className="sidebar-version">Milestone 12 · v0.12</div>
+      <div className="sidebar-version">V1 candidate · v0.13</div>
     </div>
   )
 }

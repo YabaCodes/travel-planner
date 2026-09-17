@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import AppMark from '../shared/components/AppMark'
 import BottomNavigation from '../shared/components/BottomNavigation'
+import ConnectionStatus from '../shared/components/ConnectionStatus'
 import SidebarNavigation from '../shared/components/SidebarNavigation'
 import '../styles/app-shell.css'
 
@@ -14,6 +16,10 @@ function AppShell() {
   const navigate = useNavigate()
   const tripId = getTripIdFromPath(location.pathname)
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [location.pathname, location.search])
+
   return (
     <div className="app-shell">
       <aside className="desktop-sidebar" aria-label="Primary navigation">
@@ -26,10 +32,13 @@ function AppShell() {
           <button className="brand-button" onClick={() => navigate('/trips')} aria-label="Open My Trips">
             <AppMark />
           </button>
-          <span className="milestone-pill">Backup · 0.12</span>
+          <span className="milestone-pill">V1 candidate · 0.13</span>
         </header>
 
-        <main className="app-content"><Outlet /></main>
+        <main className="app-content">
+          <ConnectionStatus />
+          <Outlet />
+        </main>
         <BottomNavigation tripId={tripId} />
       </div>
     </div>
