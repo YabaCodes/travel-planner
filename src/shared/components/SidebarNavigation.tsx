@@ -42,7 +42,7 @@ function SidebarNavigation({ tripId }: SidebarNavigationProps) {
         <div className="sidebar-hint">Open a trip to unlock itinerary, today, and trip tools.</div>
       )}
 
-      <div className="sidebar-version">Milestone 10 · v0.10</div>
+      <div className="sidebar-version">Milestone 11 · v0.11</div>
     </div>
   )
 }
