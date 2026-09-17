@@ -1,0 +1,73 @@
+name: Apply Travel Planner Milestone 11 Readiness Dashboard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-milestone-11.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  apply-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Apply Milestone 11 application files
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'H4sIAAAAAAAAA+0923bbRpJ51le0NdkheUa8WhdHkeTxZXLW58SJ1/Y8OR4JJJoiRiDAAUDJXIXn5Gk/YPd19mUf9hf2fT8lX7JV1XegQVKK7exuiORYRKO6urpuXd3oLuTZqPvFJ756vd7g6OAA/+KFf/tHB311T2X9g8HB4Gj/6GHv4Re9fv+gd/gFO/jUhOE1z4sgY+yLLE2LVXBpEJ3nkyDj4eeg6rNdOch/zINinvH8UynC3eX/8OFgfyv/z3E58i+yaPYJtODu8t/fPzzYyv9zXB75v4V/nwf5ZJgGWfhmlHGedIr8w/3bQAEf7u/XyH8weNjru/If9Pu9oy9Y7+N1s/76jcs/ms7SrGC3bJ7zP43HfFSwJRtn6ZQ1Mh6MisaODfFtdM3/ac6zhQYK+YeItwm0PUnTq9yt8F1wHV0GBd/Dm1dBFkxzF387S+cFz9phOtU1XwWX/EVSZKkE7HS68L9gfneUAlDCkyLvajirTUAaRgnP8zc8u45G0HCxmHH2WhcXoOuGBoE6DIqgm4sKebeMwsKOBiJLV6Kw4Kza4zSbBsVzYMfrILn0YpgXUSyqI5iu2+hQWTtUZtkZ5cDpnVGa5AUroiLmz4Kcs1PWvA7iOT9mOcAnly12esaopJPxWRyM+JM4bjbOG3uswRotVdjs/jD84aZ7uceaMS9AHFRP/OwU6Z9nM54h/marpdrUTPo2GPIYGwY7KqBhFGu4aLAf8dd1xG/oZwCokiJKkwahvt1hLBrLOuz09FRVawFi8EUJa6DEFqxIgefBNY8bvhqE3lT5JkqCmMligFfl33Ee5syQsLNUvRhN+OhKqITTj3l+XFYZols8swlmj1njWcyDrMGOS49F5x9jV8RPYM6TkaBgZzxP6CfzeNtmixgkSBRK9yIE0hoNUJlTY0nNloZKpJ2Jx8rqLADULvFQ23CzSX2ydLVzyQtNS1O029pj78Sv9wablr4fZdmCEK9mpw8vINb+R+JADgiRI+mPOwjbicIWi9NREL8p0gysv5Pz4kXBp81GHOTF9zOe8PAtIQUNx3q6GmBbQosOLtGwaoLENk9CPgYyQ/bjj3Yv7Uda4U7C6JqNoOX8u2DKT3dnQFEbdGB0tXtWfhaniOuyPQLO7p4hpXBHvP/5p/886QL0mfi3TFEyj+MqMVi6GR3GmfIFH2bpzekucojdpNlVPgPj3xX+QxYnaQF+Cvq6y0Kej6AItRQeTqKcyGXTYMEmYJJsCKoKQOAmeNjZZQHp8+ntyXBeFKDYFkGyRPxpt3MOWhQG2WKXpcmzOBpdnd4KoSs1bjZELNJoLc+eQj+EH4CCk65AcrZkXcUwo+M8L8AFIBnKmkkHrPK8Mw1mzaZVQu1efHlrFXVGUbEAbSkVAleKbLG8aHX+mkZJs8H++7/Ah+rWhZ/iGXY5V02rQtmuupWGJ246CdRodcZRDO62+TRNwZ0kqpE9bML0cD4Ddgk7D/JFMmK2sQiYCF1FcBNEhWPauiqKWdkgVdNMvyCmd7+8jULoJVrMjmXx0/Ta3yyq64ObKAnTG2BSMo6yafPiOekF+/mnvwMXtSGSpi1//unfH1+0lPoSjiq9eTouBJJ6grWWKFqlQTQJrN4smDuYtvHJ7hlVgmraYmQBq7UcDSAsqNJR/dw2pVtX2YSmgoE3nptCMkPwbY0lKtmXt6XIoWkawui1OA8pxDKlPAmprLW8MERoAy3xJUpicCxt8TgHl3EXA8boSj2vN2etWUKMyy4Po+ICjPtPoRS7Nuz1rc+yaPpL2o6AyzwDDEgAemKmSwwV5FoU77rkZEg5oOskIEPe7YV2zeTdmXvbbn95q0s6+XyKtHcojAHhsCCLgnaMOiC1S8NqhaxqstvC+fmE7i+tGqKOfY+0zwKHr1Ktd8/chk+6CFiqOxmc3boxX7OmV63lSReg3eqzMw8TKIJasnTMPA+LtAjiJTrJBMjJIHSzhkCK2yCkyzj0B4KvDqPxScZf8AtChNE8BmpCEWMv0nkmhi8aWIMkZGEKbhrtbDShaLyYcAEhsQTzIgWjA58Zx4vOSXfmcLdbYm9JRLZSiJC1dL9aLVzu1QGW49Cf//5vGGSugdZh6QM/sPADy/rOmmF3nXZOOTB0lFf1klTxjOJmqW0nMGFJk8t6NQE4AeFlvcQowuv1KGUfN8IpovdNyES4Wpybc00ot8M0qznxVIQT9Ju8XdM1t4oPdZwU1mKle9RH+tER6o++yfWvV3xxKkEgPqh1twJiFhSTVkmNPR6oRMT5OXDyime7wi1OojDkEHsW2RyGZ4e8GtX3gbj63vj5p/9oLH0ubhPyhmm42C1X26Rikc5wkN01CiRIJc9v6Uw+BW+jHmK0dplmpPtU7idbtq9qhbwIoriui/fsuDAYJQRrxty0Wd5asp//5V+944caWK3SVmtZtg5NpBhlVw27uxTDQUyaoYDbuN4xKw2Z0oAFtWUD1osmbjBFvai1YYP0rRhLFhW8YsYBDzoxTy6LCYV238T8QzSMeWMz1HLO4EVtZhQC/yYYrciyhl57hrQS72ayMaH1ZQbzEfe23eYfgISQh7a8qmGfqUWT5o8S7gl+vDDxnocZNNHLaYy4hso8XzLzu2KqxjNHyTVEKWCvHT6dFYvnoAPgdi6+XA2yRC1aA0OurI8+jFxYDtMCkFccM4K4gLKK1gHsn65xoVYGPThnh5iGzeIgISRvOC0KQQwEc+tLjvwouIbOG5bTKZvup5PVNM14l5YkcyOtV3S/SlSiBjAFTCMsS+hFyIN8j8GsIc1IhHsU/uXguMJ5DAGiqN351fo7TNMriN6tHj+VJav6rGotYSQfpVm4mWZOozyHWq/53+ZRxkPVkLPAZIEXKUJoqFptrkP7hw2wLpnsipygfvwWPOaTzgtw9gnOmtB8Gt+lJSpyG+TXNIZghFRZ1iAKVpqDAMGFUeBuhH82Uo5MMlc28ZpPg4iWKWvlXlcDlVI8oebvVtkjrijB1z64GHThzFkMMrvP9fQiFA//nERFvuz6QWjeKUkSgGyOf5ioS9ryDGOeOMJ1d1ynwSUYHv6KSiJignbMbSciwgiGhfWTF6vfBP4tNx6l6kpfBn9NMzaOo8tJAW4UqkQJ/B3zLCO/Opznyr1GCb7Vw4VUhguHv6J7pTgxSsapzRoY5bBoM8YAMoC9szmpim+49Ci1almGxDWRMc4XQBLAXJ6MOJNR1mYIqiZEevt9Beswgjgs20yNNwv9hqAKY/mao3aya4CsxSsTsNYvUj3FikpqkwHGBgn5jFEKCvehoKUn+TqljIkUQYT4u2vjf2qgGlBXO4ERbd0Cx8q427cE/B3KYcZH0TiSkli/PlE7XXBfSAD6iy9rphD6VUQNgEedNqMN/Cj3jlQzrYJoFiVZWA/RY/OWGKHvzhqInYVar6PhsbyB0egcot9zqsQeP95k5rZKMc7Pb6KQZv007UCfCGL3x3UOOZECNfF8hTUGxn4fJXgFRr4xszYh/eU8L9phxV9WCZ8C4HmYriBbQXx6or9JU1yNx6WBUf3c1yF/DFXO7SorOlKFvW+X7rv6MQ2S4JJPYRDwvrVBh9hWg2bNEKpfCy7PnuuXi+teyFiIgS3JJYz0WFTbiHh5CC2Il4IuetNdhxUt3KXBP9D2l5CPg3lc+PZK7PzaG6j+j1+e/X/VnUa/sI3V+/96Rw/3S/s/B71+b3+7/+9zXJ3Sy0t8pT8LQozIjtlgMPvwNRQMcTaQHbP+7APL0zgK2XWQNdttUd4yIO0MkOHmKfFc3LXjSwECE6jLDPeWwBTuchg0BwcHe8z80/lKYvrQBkaH6Y1CI+7oYRjlszhYHDP09lhwGcyArkdIJ/iLUm/abXpDwG4VeaM0TqEfvxuOw8Ho6Gu29NXA9eRqlXA8CoOvvFX0zrJqLf5wyIePsFa5mg58ieW6X2OIN7BfAUyykjZNNkRhm2ISfPRXUNlovGhTyJsUx4w2I7SHvLgBh7iWKabhjoytgexpkF1GCQgUfPL0mB1B1WpPTc3JQNc5Zj34D9tiYyConUf/zKHxzv4BeP2VSGbU82nwoQ2DdjGBVgc9oW8a89e0/4RYKVQhSq7auDOElMFqr/PoEJuDQtrLMOE4RUUyDg7KPBAvQ7Fp2ez+oWhVVVL3yHXRO3wV7FHy/oEArCglrSgq4Y04xmklevuSWiq6kQ0/6vW8xFpqbJmQYEgwQvySJy6v8jk8y/NWSQgapdJzC+fvxvsA91UJ0U2Q4RyrBpGj/Q6uQ37AByVcIlxolS1Cvil2bUHbOL40AGbO8IU+mtZ8muS4DDSDgav5cI9NowTUqNnbY/1x1mppE/iqagGqoTOGQSQpIOi9Ev2RVEDtAfvgAVl/33aDRvyquCKUfJ6NUQO0plbMmyw6jDIR+hwz0ak7WLfHuFXXaN5767OccQBzhorpHD7yKSOMxGROtAm4jUQQQzq9AwFMMSDtzsDNScdsjpuERzCHqyWLQl/aBm25ib5yE46fENs7sA/4gm8c41gg3gZ/hOFoGrYqfpFeiVs+od/r/cPXZeU4LCvHw6pyKA+6irY6fWn53F3NsOc3iQGoRckatPNyRhTjlMRY0RedIKES4DFIfkzDzWie5UjRLI1EHQ/rjnH7LfyM4tCMgYoVvfIoQDXolRr3+jTXfHy6oTYK2CIbPHLduLovqcKBEOw9fHbnaN/rtQcVry13VAivXU/7R3Hnui1y5xs2dic/L1sQ70U2b+EO3t/aXaFdspRqrz7qk6PvZvHB0SN/fLDvlZ3esOEPzsh732RIBP5bsa4huEGsrUkFz+EbjEptaQ9Z9QGeWMcjJAsVruDeaRAYfNJBwNlGche6jrxkDYismwnwm6gCyCQVovBaYq3uKoJq1fQOlubHtdqo6lyEH5ftAnb+OOVhFLCmFUAfHEL8Ig6PVOZ11rD1SET3rNIuQG0+sPhRWKQTKoEBECC4TbUx8cNHhuq6nSL1lNVHgdTgrz2//t9+4foPnTz7hG3c/fzvYL9/tD3/+zkuLX99dvHjt3GP89+D/cFW/p/jqsq/cniv+LTrv4OD/d5BZf23v13//SyXPpwcDu3zyOFQnz2m89O37ClEda9pX4gNhw9zPJM9xVOtbo0nYtPkYo/JjVh77JXZpbPH3qodJ3v0YmdPvt5ZiB9qy0W1NVxtwn189snqKAlVc99f8ywOZs4Zb3GsWu7iXLyNplwfnpbz0FN28pZBNMuTMLf6etaUu+uO2dt371v0rzjhSqXq0J6EaplHHXkw8jwozIFN/ULLeyb9tO7stDwzXFuX11c1Z55VdZrE4/Ta4HimVz+iUJ0cx6gftyVY92o7ulVUc1Ya50y0C90CxRMB+nbpIQeFrvE8x1M6SBG+jDqmZ0gBrQsdlyh/9x4pEacwjuWZRNrFBZOC+XTIMyoh/pRKkE9OUSCX46wieazdZfgOo+BXb8BxmsUduw4K3HOb8LBSrvf3OqXzJMhzmEx6KuDpyjgaFXmpH86eyCd6r7IDVbOB0oFxt026fbD211UeyC11JVylfXRemst7/1wUektaqdjd7OR9WCZ0aQ79C4sH5hpO4bn/wOKb8iXv3uOpysWxck1k4AYQZyzKAyjnYoOIjVm0owRP5Z7ioeBFB37+/vcGRJ5WeYCnVUZBMuJxzMNGLUh+FcEkO2zoTAww378S8uR48rc51OKTgsROKFQvQic1hILFjuTplDdVbfup2gmvO2GQIZUKyj51MyRqDI1Se17KpWCgUq6UWAMCuFd1plgeqC5rENSjajDnDOcjIBaMfo+KRHKG+ZT9gW47f5sHOEjAUNIzB7QtTd0I00vwWB2YVDZLKOlWIDtXpS2npfqdrbJZpTS6RcKp98wCV32NsBO3dy25OWVHH3y+rTJtz+73Xj1ploFou4OBkmBoweMUk4OgWulxW0oMS3WP4IYKH8APGANnQYZbC3AU/PFHURhkWXQdxFCk6VeDQSm5hMq0ckpKIQ6eezJJaI0GdYIBP8r5SXUs+ZFGYPekPB12UGflwyEZa465KpzT5nS8nUChB7RN0AztOgUDIt+xUL+zT9S8Dm7IjYgfxn3QrTJBupF28m2UF6LAuEC6jSy3BwXvNfWy450gjpvvdsS2IdkjexNi52bCM95skFuKwEA7oA5BrHNydIr0SZYFi2Zrr4QEj5bcp7Lp7b2qK+7cq7LNzXv2XHH/3oyzB6q7IhH5STzZLdB/iVGsWdKzFrjxrIDRCBRLjESdHBqhvb5tNtQ3LRsxnTDSCIWeehDN0jyipT1EpG5sRIE9nkp0jrbbwEN9OEOBWpZgA9pSNMAlS2k5Zq2kZsAdO7KBI2fXtAIv2ZkjB+ekwalDnvHHeD3WPFAOxq6qlEGWneNxAqEUQbL4fux0UJz2RQjhcOEH5rSxFKYl2zxmFA3bvZORkD2nwjmM0/N1hDtRlaJc7tuziXZwEtESSAyr4vcq0i3aJwF6btIlmROlWcp4geOkm+7CFpMJuikZy8KMUaEdyLmBoKWv5LLVEMXOYHy3uSQasU7oyXBBLEDbJ/HaNik2hW6gj0RWT2FCu33ae+oh/wEGk1YdEIQm95j1rJb0vEFxwgl7FD4R9fim0hZX7hXvthRdFCVVncBrGFCvIaZ5UnEgm7R57wDa0FE7hQI6amlcQ5asdy5x4y5ddSRdNOZQUHe+7bSeNn/7D+z5gPapZgZgi8N2mqUTc9o/61Z8MwM75i/ScyxumKjOYP8lcanxsXL60LTdqM1DiCLBw2AGMGsAcMzSY2Bt1vfIoRaFp422NeJIrO4Io86uvbXialItb6BtjVWOrdQtfgAe7ThFbojZPJ80b6VbxSWdBh30bajQRC7sNOQZdvuRWeNpPA1yYLZ+opZ6tFt+rNecjvUalQ5+5OqPBXwhjmVZ7puSBTBZrFy4OKhEh5PV5IHOk8k4W5xYHvJxmnHJvo5uVSwx+XMNCZhlaw2j9GHxCrOeQ4cWrPrc4tiLykPFtAeaETCHsAcHtJyeYKXKEWjGlDPxSPKW6dyKZS6vxi6BcVgnvhZa6s7J75CS5ejz352GrlciSZczIVXrJHs6xpxphoClxucUew54UkK5JFWrsZbvv7DaA+E+ieNf1IY4Ad+5WKMzJmnAhopju5aq7liZvcSYj6OB1+rqdcjnvE6wjyD0cihhtGqNgdYhdZQGXFPM2xYosfxrlBcmFjA9YgnnIQ8d3SmR5lEgF0LmQ/D0yJcAARsEmdp5+lyFKWdBiHKmEKP6u1XXeZI7a4UOvCoq8UamH2BVkI20wYR0m3oJp4YlX5CAfgTGBENTSLsuIfCznngkAIhpKIQRjpJnae5YIhBH6wVSFYEo7LnGcH/G21EkpXkVGaBgTKwLqJBduJDjxjuKJbWSVOFQRZBPyw8s8b3m+Fa15BSUBD1UbyLGajVLlu8s3a9d8hcyr3londyX8qoFNSpByUWIZgyZ0c+CeoB3kNkgAZekGgd3XCrbc+j0ZZmoyxEh3q6Vn9f6B9qbGLK3Ir2Dr/n3NYk3dXZPpcj1cbgzeZZGJcapdXUsbssOrq/j6SvlwVO8LjtAsL9yIyJznpXgYq0BuolKXCOE0FZF6G/87wPN+8lyheek1fhcBv7CAim3Aqbxk5GzHFFwKdZZQ7HjnBa71X2wiGEmCZj7eFXTmCsHz8RTilt5MJ4teCHpWDIe55zIqZ23nK2kSL3T9VN0YbRgRWYNWUtn2Ng4m4YwDTMvkRpj9cp+VXJSnbvdm9XQMTsFhwgYPRk3VNdE5g1UVlHtazeviMwAWerGakcuUVf8+KtSueXGX2U4FQmcAEp5cYcBZV/tdH8TC1PZXqoGpieFm5uYrqLZXxtC0kJaaQ7rzB4ekx8RST3cQFAlGUFzVcLRAeCxmPaVMC/BLWMiEVPZA+TRW5WWRAoaFbU6XXfsrsS1quVVeWSGxrdWRpRVPfdUqDW6YDbjQYaR55Cr8blqfrVLBus651qft3N1uJdOj+oXLbyDj+yJNWcH8coXfRT9bWabVh6bin2+tFTGZ6RvKVFsmhUVEy3xqWykJS5tYqZ2vp0NZwI6C41/FQafYIpn28U4gaTMOlDpnF7htxaq3Zmf1Ilyt30V3VlBGcKXlUaMPRVcPvVPRUyZpXnORJXS24elyXHjeVrFWZlmKPKI1xaNhrc0sNOgHoShGtI3k7hKIuSbgIhd/KdK+mrF1KRnrUtd6lmIzdTb9jshE1/CqGIL1HToDtikh/Rg8+6Fkkv10IqaiepNZxQ1U3fOyqtcarAi7Gr3gvZb0UwbAdGttV7v8lI7vGS/1OsFwronW92ThO0JwtlSoans26JWzd4tax3JTBWstzimUC9+mSJ35cKU66m0KVqxc2vdLMAgqZmd7Vkds6dKVoecLV2euNoFVUv1LsOcJf1Kx8rBqFXZ2ttVGfttsPJeL49rqILLPpX9kgKUioCjEfz8TR8Swf3f8stKn6yNe5z/ODrYfv/vs1yW/K0va33cNu4u/4P+fn8r/89x+eX/Jgr5MMjkd6RwafyXfABwTf6fh73BYfn7f4Oj/vb8x+e49BEKkPW3UXK1/ut8/5hO+QsIZszpigijw64q14DPAhh1wyDzAdvPdIW3KQRePmj9QIO+hKDcB6nKIbA0Jwsq2vwqS2e5Pl5gdpDKXaLlreLPMPMZ7n+9ZRGtuV9DLIkxqLqjVXlcPIZ5AX1OKhcttnEvBsxmVCWIgKFOW2ClKLixvLC+BVchtKm//gbt+bsh1gNWfvhIUSM/CSaDoDqoIUykV+XudODOz/HjVbsq2Syl4+TZmsSZJQyjYCY+LvCKZ3mKn/CTKxH6Q0ul/Hj2hzROlN4W6emuSGC2a3/3wpKg9TmKE63EXatQ54YtfQLnpCsb0a3KySEI1Hx448RJUWiRdbviddZyPa2EzrGlbumhN6e9TYyhf1MKC7S4jakzhusljR5/FLJwLr4xVdpHeInCpxvRdKKrY07H5lqtnkSYjpG+KxWI985FCpPCOB1dmVeke4w4LHIlS6A0xizJlqa3ljtrbPUaLIZM52UU87zAdJP9Pr65uu51+n0L2cq0ihXH8lueEP3GLoz/gtnsUx7/v8/8b3B4uI3/P8el5P9kNnsz4XH8y7707b/WxP+Dh4cPy+f/D/Z72/j/c1w6/v9+XsS8oO90f5uOArFuan1LeP3EAFToZZBdmZC8Oq+UILrKU0oRZgaeVXXLsBpJZfhahaUCbH1jG+CLBYyjaBDtnKzB/sz2JS/oEEX4DaB/FeArCXxTXkwwBHaOVZozjNOgGE1oB7MA61BBs/uXHyi0+aHbfPeX7vs/tLotE8QTyOPOu/57zECuJiR6kqAs1flKdCxFJr/HLO/u8oFoGdGeVrvZVMg7qhettd9a1Rw0040AgxbnIw88vypSgBMi2XW+hflKfORT0U1Bjgm9lKqhYEEbnSi+qg6ia6cqijTQJ10i6qwuzMJeiERDduOYv5RnNtw0HUL81RYP3I8BeL5mirOe9rpvWZgPIDtsobDy5YJO8+SlL9FprnTdiLb65bXKpxGmKnxszyKUmX7Dg7GkCCXdSPmkKzprf9AQ1/ir3KMsli5PhKtxhNbFyjayimdYIcTNolxlN9vgdnttr+21vbbX9tpe22t7ba/ttb221/baXttre22v7bW9ttf//+t/ADUuziAAoAAA' | base64 --decode > /tmp/milestone-11.tgz
+          tar -xzf /tmp/milestone-11.tgz -C .
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          package_path = Path("package.json")
+          package = json.loads(package_path.read_text())
+          package["version"] = "0.11.0"
+          package_path.write_text(json.dumps(package, indent=2) + "\n")
+
+          lock_path = Path("package-lock.json")
+          lock = json.loads(lock_path.read_text())
+          lock["version"] = "0.11.0"
+          if "" in lock.get("packages", {}):
+              lock["packages"][""]["version"] = "0.11.0"
+          lock_path.write_text(json.dumps(lock, indent=2) + "\n")
+          PY
+
+      - name: Install dependencies and validate production build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit validated Milestone 11
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json src
+          if git diff --cached --quiet; then
+            echo "No Milestone 11 changes to commit."
+            exit 0
+          fi
+          git commit -m "Add Travel Planner Milestone 11 readiness dashboard"
+          git push origin HEAD:main
+
+      - name: Trigger permanent Pages deployment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run deploy-pages.yml --ref main
