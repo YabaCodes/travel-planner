@@ -60,9 +60,10 @@ export interface RestoreResult {
   created: number
   updated: number
   skipped: number
+  keptNewer: number
   errors: number
   total: number
-  perTable: Record<BackupTableName, { created: number; updated: number; skipped: number }>
+  perTable: Record<BackupTableName, { created: number; updated: number; skipped: number; keptNewer: number }>
 }
 
 export interface BackupOverview {
@@ -95,6 +96,12 @@ const isObject = (value: unknown): value is Record<string, unknown> => typeof va
 const assertRecord = (value: unknown, tableName: BackupTableName, index: number): BackupRecord => {
   if (!isObject(value)) throw new Error(`Backup table “${tableName}” contains an invalid record at position ${index + 1}.`)
   if (typeof value.id !== 'string' || !value.id.trim()) throw new Error(`Backup table “${tableName}” contains a record without a valid id.`)
+  // Every record carries the same bookkeeping fields; a file that lacks them wasn't made by this app.
+  const badField = typeof value.created_at !== 'string' ? 'created_at'
+    : typeof value.updated_at !== 'string' ? 'updated_at'
+      : !(value.deleted_at === null || typeof value.deleted_at === 'string') ? 'deleted_at'
+        : typeof value.revision !== 'number' ? 'revision' : null
+  if (badField) throw new Error(`Backup table “${tableName}” has a record with a missing or invalid ${badField} (position ${index + 1}).`)
   return value as BackupRecord
 }
 
@@ -275,7 +282,7 @@ export const backupService = {
 
   async restoreBackup(backupInput: TravelPlannerBackup, mode: RestoreMode): Promise<RestoreResult> {
     const backup = validateBackupObject(backupInput)
-    const perTable = Object.fromEntries(BACKUP_TABLE_NAMES.map((name) => [name, { created: 0, updated: 0, skipped: 0 }])) as RestoreResult['perTable']
+    const perTable = Object.fromEntries(BACKUP_TABLE_NAMES.map((name) => [name, { created: 0, updated: 0, skipped: 0, keptNewer: 0 }])) as RestoreResult['perTable']
 
     await db.transaction('rw', db.tables, async () => {
       if (mode === 'replace') {
@@ -293,13 +300,21 @@ export const backupService = {
         if (!records.length) continue
         const table = db.table(name)
         const existing = await table.bulkGet(records.map((record) => record.id))
+        // Merge never goes backwards: when this device has a newer copy of a record (edited or
+        // deleted after the backup was made), the device's copy is kept.
+        const incoming: BackupRecord[] = []
         records.forEach((record, index) => {
-          const current = existing[index]
-          if (current === undefined) perTable[name].created += 1
-          else if (sameRecord(current, record)) perTable[name].skipped += 1
-          else perTable[name].updated += 1
+          const current = existing[index] as BackupRecord | undefined
+          if (current === undefined) {
+            perTable[name].created += 1
+            incoming.push(record)
+          } else if (sameRecord(current, record)) perTable[name].skipped += 1
+          else if (String(record.updated_at) > String(current.updated_at)) {
+            perTable[name].updated += 1
+            incoming.push(record)
+          } else perTable[name].keptNewer += 1
         })
-        await table.bulkPut(records)
+        if (incoming.length) await table.bulkPut(incoming)
       }
     })
 
@@ -307,7 +322,8 @@ export const backupService = {
     const created = BACKUP_TABLE_NAMES.reduce((sum, name) => sum + perTable[name].created, 0)
     const updated = BACKUP_TABLE_NAMES.reduce((sum, name) => sum + perTable[name].updated, 0)
     const skipped = BACKUP_TABLE_NAMES.reduce((sum, name) => sum + perTable[name].skipped, 0)
-    return { mode, created, updated, skipped, errors: 0, total: created + updated + skipped, perTable }
+    const keptNewer = BACKUP_TABLE_NAMES.reduce((sum, name) => sum + perTable[name].keptNewer, 0)
+    return { mode, created, updated, skipped, keptNewer, errors: 0, total: created + updated + skipped + keptNewer, perTable }
   },
 
   async runIntegrityCheck(): Promise<IntegrityCheckResult> {

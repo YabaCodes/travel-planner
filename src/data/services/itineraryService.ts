@@ -11,7 +11,8 @@ import type {
   TripPreferences,
 } from '../types/entities'
 import { createRecordMetadata, softDeleteRecord, touchRecord } from '../utils/record'
-import { findActivityOverlaps } from '../utils/activityTime'
+import { chronologicalOrder, findActivityOverlaps, insertIndexForTime } from '../utils/activityTime'
+import { formatShortDate } from '../utils/tripDate'
 
 const active = <T extends { deleted_at: string | null }>(records: T[]) => records.filter((record) => record.deleted_at === null)
 
@@ -45,11 +46,24 @@ export interface ItineraryDaySummary {
   overlapCount: number
 }
 
+// An activity whose day no longer exists (left behind by a date change in an earlier version).
+export interface UnplacedActivity {
+  activity: Activity
+  formerDate: string | null
+}
+
+export interface DestinationRange {
+  destinationId: string
+  from: string
+  to: string
+}
+
 export interface ItineraryOverview {
   trip: Trip
   preferences: TripPreferences | null
   destinations: TripDestination[]
   days: ItineraryDaySummary[]
+  unplaced: UnplacedActivity[]
   counts: {
     activities: number
     timed: number
@@ -102,6 +116,23 @@ const getLinkedTransportSegments = async (activityId: string) => {
   return active([...unique.values()])
 }
 
+// Positions are renumbered 100, 200, … so the stored order always matches the list.
+// `fresh` is the activity being saved; it is returned even when its position didn't change.
+const renumber = (ordered: Activity[], fresh?: Activity) => ordered.flatMap((item, index) => {
+  const position = (index + 1) * 100
+  if (fresh && item.id === fresh.id) return [{ ...item, position }]
+  return item.position === position ? [] : [touchRecord({ ...item, position })]
+})
+
+// The day's activities with `activity` placed in clock order (untimed activities go last).
+// With `afterId`, it goes right after that activity instead (used for duplicates).
+const layoutDayWith = async (dayId: string, activity: Activity, afterId?: string) => {
+  const others = orderedActivities(await db.activities.where('trip_day_id').equals(dayId).toArray()).filter((item) => item.id !== activity.id)
+  const after = afterId ? others.findIndex((item) => item.id === afterId) : -1
+  const index = after >= 0 ? after + 1 : insertIndexForTime(others, activity.start_time)
+  return renumber([...others.slice(0, index), activity, ...others.slice(index)], activity)
+}
+
 const getPlaceIdForTripPlace = async (tripPlaceId: string | null) => {
   if (!tripPlaceId) return null
   const tripPlace = await db.tripPlaces.get(tripPlaceId)
@@ -124,7 +155,14 @@ export const itineraryService = {
 
     const destinations = active(destinationsRaw).sort((a, b) => a.sequence - b.sequence)
     const days = active(daysRaw).sort((a, b) => a.position - b.position)
-    const activities = active(activitiesRaw)
+    const dayIds = new Set(days.map((day) => day.id))
+    const allActivities = active(activitiesRaw)
+    const activities = allActivities.filter((activity) => dayIds.has(activity.trip_day_id))
+    const formerDates = new Map(daysRaw.map((day) => [day.id, day.date]))
+    const unplaced = allActivities
+      .filter((activity) => !dayIds.has(activity.trip_day_id))
+      .map((activity) => ({ activity, formerDate: formerDates.get(activity.trip_day_id) ?? null }))
+      .sort((a, b) => (a.formerDate ?? '').localeCompare(b.formerDate ?? '') || a.activity.position - b.activity.position)
     const destinationMap = new Map(destinations.map((destination) => [destination.id, destination]))
 
     const daySummaries = days.map((day): ItineraryDaySummary => {
@@ -143,6 +181,7 @@ export const itineraryService = {
       preferences,
       destinations,
       days: daySummaries,
+      unplaced,
       counts: {
         activities: activities.length,
         timed: activities.filter((activity) => activity.start_time !== null).length,
@@ -201,9 +240,6 @@ export const itineraryService = {
     }
     validateStartTime(draft.startTime)
 
-    const dayActivities = orderedActivities(await db.activities.where('trip_day_id').equals(day.id).toArray())
-    const position = dayActivities.length ? Math.max(...dayActivities.map((activity) => activity.position)) + 100 : 100
-
     const activity: Activity = {
       ...createRecordMetadata(),
       trip_id: tripId,
@@ -217,11 +253,14 @@ export const itineraryService = {
       start_time: draft.startTime,
       duration_minutes: normalizeDuration(draft.durationMinutes),
       time_locked: draft.timeLocked,
-      position,
+      position: 0,
       notes: draft.notes?.trim() || null,
     }
 
-    await db.activities.add(activity)
+    const layout = await layoutDayWith(day.id, activity)
+    await db.transaction('rw', db.activities, async () => {
+      await db.activities.bulkPut(layout)
+    })
     return activity.id
   },
 
@@ -238,12 +277,6 @@ export const itineraryService = {
     }
     validateStartTime(draft.startTime)
 
-    let position = activity.position
-    if (targetDay.id !== activity.trip_day_id) {
-      const targetActivities = orderedActivities(await db.activities.where('trip_day_id').equals(targetDay.id).toArray())
-      position = targetActivities.length ? Math.max(...targetActivities.map((item) => item.position)) + 100 : 100
-    }
-
     const nextActivity = touchRecord({
       ...activity,
       trip_day_id: targetDay.id,
@@ -256,21 +289,25 @@ export const itineraryService = {
       start_time: draft.startTime,
       duration_minutes: normalizeDuration(draft.durationMinutes),
       time_locked: draft.timeLocked,
-      position,
       notes: draft.notes?.trim() || null,
     })
 
     const dayChanged = targetDay.id !== activity.trip_day_id
     const placeChanged = nextActivity.trip_place_id !== activity.trip_place_id
+    // A new day or a new start time puts the activity back in clock order.
+    const reorder = dayChanged || (nextActivity.start_time !== null && nextActivity.start_time !== activity.start_time)
+    const layout = reorder ? await layoutDayWith(targetDay.id, nextActivity) : [nextActivity]
     if (!dayChanged && !placeChanged) {
-      await db.activities.put(nextActivity)
+      await db.transaction('rw', db.activities, async () => {
+        await db.activities.bulkPut(layout)
+      })
       return
     }
 
     const linkedSegments = await getLinkedTransportSegments(activity.id)
     const nextPlaceId = dayChanged ? null : await getPlaceIdForTripPlace(nextActivity.trip_place_id)
     await db.transaction('rw', [db.activities, db.transportSegments], async () => {
-      await db.activities.put(nextActivity)
+      await db.activities.bulkPut(layout)
       for (const segment of linkedSegments) {
         if (dayChanged) {
           await db.transportSegments.put(softDeleteRecord(segment))
@@ -288,16 +325,16 @@ export const itineraryService = {
   async duplicateActivity(activityId: string): Promise<string> {
     const activity = await db.activities.get(activityId)
     if (!activity || activity.deleted_at) throw new Error('Activity not found.')
-    const dayActivities = orderedActivities(await db.activities.where('trip_day_id').equals(activity.trip_day_id).toArray())
-    const position = dayActivities.length ? Math.max(...dayActivities.map((item) => item.position)) + 100 : 100
     const copy: Activity = {
       ...activity,
       ...createRecordMetadata(),
       title: `${activity.title} copy`,
       status: 'planned',
-      position,
     }
-    await db.activities.add(copy)
+    const layout = await layoutDayWith(activity.trip_day_id, copy, activity.id)
+    await db.transaction('rw', db.activities, async () => {
+      await db.activities.bulkPut(layout)
+    })
     return copy.id
   },
 
@@ -328,11 +365,10 @@ export const itineraryService = {
     if (!targetDay || targetDay.deleted_at || targetDay.trip_id !== activity.trip_id) throw new Error('Target day not found.')
     if (activity.trip_day_id === targetDayId) return
 
-    const targetActivities = orderedActivities(await db.activities.where('trip_day_id').equals(targetDayId).toArray())
-    const position = targetActivities.length ? Math.max(...targetActivities.map((item) => item.position)) + 100 : 100
+    const layout = await layoutDayWith(targetDayId, touchRecord({ ...activity, trip_day_id: targetDayId }))
     const linkedSegments = await getLinkedTransportSegments(activityId)
     await db.transaction('rw', [db.activities, db.transportSegments], async () => {
-      await db.activities.put(touchRecord({ ...activity, trip_day_id: targetDayId, position }))
+      await db.activities.bulkPut(layout)
       for (const segment of linkedSegments) await db.transportSegments.put(softDeleteRecord(segment))
     })
   },
@@ -351,5 +387,63 @@ export const itineraryService = {
       await db.activities.put(touchRecord({ ...activity, position: other.position }))
       await db.activities.put(touchRecord({ ...other, position: originalPosition }))
     })
+  },
+
+  // Puts the day's timed activities in clock order; untimed ones keep their place.
+  async sortDayByTime(dayId: string) {
+    const ordered = orderedActivities(await db.activities.where('trip_day_id').equals(dayId).toArray())
+    const changed = renumber(chronologicalOrder(ordered))
+    if (!changed.length) return
+    await db.transaction('rw', db.activities, async () => {
+      await db.activities.bulkPut(changed)
+    })
+  },
+
+  // Current city ranges, worked out from the days each city is assigned to.
+  async getDestinationRanges(tripId: string): Promise<DestinationRange[]> {
+    const days = active(await db.tripDays.where('trip_id').equals(tripId).toArray()).filter((day) => day.date && day.destination_id)
+    const ranges = new Map<string, DestinationRange>()
+    days.forEach((day) => {
+      const date = day.date as string
+      const id = day.destination_id as string
+      const current = ranges.get(id)
+      if (!current) ranges.set(id, { destinationId: id, from: date, to: date })
+      else ranges.set(id, { destinationId: id, from: date < current.from ? date : current.from, to: date > current.to ? date : current.to })
+    })
+    return [...ranges.values()]
+  },
+
+  // Assigns each city to the days in its date range. Days outside every range keep their city.
+  async assignDestinationRanges(tripId: string, ranges: DestinationRange[]) {
+    const [destinationsRaw, daysRaw] = await Promise.all([
+      db.tripDestinations.where('trip_id').equals(tripId).toArray(),
+      db.tripDays.where('trip_id').equals(tripId).toArray(),
+    ])
+    const destinations = new Map(active(destinationsRaw).map((destination) => [destination.id, destination]))
+    const used = ranges.filter((range) => range.from || range.to)
+    for (const range of used) {
+      const destination = destinations.get(range.destinationId)
+      if (!destination) throw new Error('One of the cities no longer belongs to this trip.')
+      if (!range.from || !range.to) throw new Error(`Choose both dates for ${destination.city}, or leave both empty.`)
+      if (range.to < range.from) throw new Error(`${destination.city}: the last day is before the first day.`)
+    }
+    const days = active(daysRaw).filter((day) => day.date)
+    const changed: TripDay[] = []
+    for (const day of days) {
+      const date = day.date as string
+      const matches = used.filter((range) => range.from <= date && date <= range.to)
+      if (matches.length > 1) {
+        const names = matches.map((range) => destinations.get(range.destinationId)?.city ?? 'a city').join(' and ')
+        throw new Error(`${formatShortDate(date)} is in both ${names}. A day can have one city: pick where you sleep that night.`)
+      }
+      if (matches.length === 1 && day.destination_id !== matches[0].destinationId) {
+        changed.push(touchRecord({ ...day, destination_id: matches[0].destinationId }))
+      }
+    }
+    if (!changed.length) return 0
+    await db.transaction('rw', db.tripDays, async () => {
+      await db.tripDays.bulkPut(changed)
+    })
+    return changed.length
   },
 }

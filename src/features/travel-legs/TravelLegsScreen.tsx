@@ -19,10 +19,14 @@ const formatDateTime = (value: string | null) => {
   return `${date} ${time.slice(0, 5)}`.trim()
 }
 
+// Which part of the trip route this leg covers, in plain words.
 const destinationLabel = (view: TravelLegView) => {
-  const from = view.fromDestination ? `${view.fromDestination.city}, ${view.fromDestination.country}` : 'Unlinked'
-  const to = view.toDestination ? `${view.toDestination.city}, ${view.toDestination.country}` : 'Unlinked'
-  return `${from} → ${to}`
+  const from = view.fromDestination?.city
+  const to = view.toDestination?.city
+  if (from && to) return `${from} → ${to}`
+  if (to) return `Getting there · arrives in ${to}`
+  if (from) return `Getting home · leaves ${from}`
+  return 'Not linked to a trip city · edit to link it'
 }
 
 function TravelLegsScreen() {

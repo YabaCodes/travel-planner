@@ -42,3 +42,8 @@ export const formatShortDate = (value: string | null) => {
   if (!value) return 'Unscheduled'
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(parseUtcDate(value))
 }
+
+// Calendar maths on YYYY-MM-DD strings (UTC, so time zones and DST never shift a day).
+export const addDaysYmd = (value: string, days: number) => new Date(parseUtcDate(value).getTime() + days * DAY_MS).toISOString().slice(0, 10)
+
+export const daysBetween = (from: string, to: string) => Math.round((parseUtcDate(to).getTime() - parseUtcDate(from).getTime()) / DAY_MS)

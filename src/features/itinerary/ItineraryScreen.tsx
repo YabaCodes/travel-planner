@@ -3,7 +3,15 @@ import { useNavigate, useParams } from 'react-router-dom'
 import PageIntro from '../../shared/components/PageIntro'
 import PlusIcon from '../../shared/icons/PlusIcon'
 import { itineraryService } from '../../data/services/itineraryService'
-import { formatShortDate } from '../../data/utils/tripDate'
+import { formatShortDate, todayYmd } from '../../data/utils/tripDate'
+import type { TripDestination } from '../../data/types/entities'
+import './itinerary-tools.css'
+
+// "Lyon May 2 – May 9" for each city, from the days assigned to it.
+const cityRanges = (days: Array<{ day: { date: string | null; destination_id: string | null } }>, destinations: TripDestination[]) => destinations.map((destination) => {
+  const dates = days.filter((item) => item.day.destination_id === destination.id && item.day.date).map((item) => item.day.date as string)
+  return { destination, count: dates.length, from: dates[0] ?? null, to: dates.at(-1) ?? null }
+})
 
 const weekday = (value: string | null) => {
   if (!value) return 'Flexible day'
@@ -19,7 +27,16 @@ function ItineraryScreen() {
   if (data === undefined) return <div className="page-stack"><div className="loading-card">Loading itinerary…</div></div>
   if (data === null) return <div className="page-stack"><PageIntro eyebrow="Itinerary" title="Trip not found" description="Return to My Trips and choose another trip." action={<button className="button button--secondary" onClick={() => navigate('/trips')}>Back to trips</button>} /></div>
 
-  const firstDay = data.days[0]?.day
+  // "Add activity" goes to today's day while traveling, otherwise the first day.
+  const firstDay = data.days.find((item) => item.day.date === todayYmd())?.day ?? data.days[0]?.day
+  const ranges = data.destinations.length > 1 ? cityRanges(data.days, data.destinations) : []
+  const withoutCity = data.destinations.length > 1 ? data.days.filter((item) => !item.day.destination_id).length : 0
+  const moveUnplaced = async (activityId: string, dayId: string) => {
+    if (dayId) await itineraryService.moveActivityToDay(activityId, dayId)
+  }
+  const deleteUnplaced = async (activityId: string, title: string) => {
+    if (window.confirm(`Delete “${title}”?`)) await itineraryService.softDeleteActivity(activityId)
+  }
 
   return (
     <div className="page-stack itinerary-page">
@@ -29,6 +46,33 @@ function ItineraryScreen() {
         description={data.days.length ? `${data.days.length} trip days. Build each day as a flexible sequence, then adjust times and order as plans change.` : 'This trip does not have dated days yet. Set trip dates first and the day planner will be generated automatically.'}
         action={firstDay ? <button className="button button--primary" type="button" onClick={() => navigate(`/trip/${tripId}/itinerary/day/${firstDay.id}/activity/new`)}><PlusIcon />Add activity</button> : <button className="button button--primary" type="button" onClick={() => navigate(`/trip/${tripId}/edit`)}>Set trip dates</button>}
       />
+
+      {data.unplaced.length ? (
+        <section className="unplaced-card" aria-label="Activities that need a day">
+          <div><strong>{data.unplaced.length} activit{data.unplaced.length === 1 ? 'y needs' : 'ies need'} a day</strong><p>{data.unplaced.length === 1 ? 'It was' : 'They were'} on days removed by an earlier date change. Choose a day to bring {data.unplaced.length === 1 ? 'it' : 'them'} back.</p></div>
+          <ul>
+            {data.unplaced.map(({ activity, formerDate }) => (
+              <li key={activity.id}>
+                <span><strong>{activity.title}</strong><small>Was on {formatShortDate(formerDate)}{activity.start_time ? ` at ${activity.start_time}` : ''}</small></span>
+                <span className="unplaced-card__actions">
+                  {data.days.length ? <label><span className="visually-hidden">Move {activity.title} to</span><select value="" onChange={(event) => moveUnplaced(activity.id, event.target.value)}><option value="">Move to…</option>{data.days.map(({ day }) => <option key={day.id} value={day.id}>Day {day.day_number} · {formatShortDate(day.date)}</option>)}</select></label> : null}
+                  <button className="text-button danger-text" type="button" onClick={() => deleteUnplaced(activity.id, activity.title)}>Delete</button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {ranges.length && data.days.length ? (
+        <section className="city-summary" aria-label="Cities">
+          <div className="city-summary__list">
+            {ranges.map(({ destination, count, from, to }) => <div key={destination.id}><strong>{destination.city}</strong><span>{count ? `${formatShortDate(from)}${from !== to ? ` – ${formatShortDate(to)}` : ''} · ${count} day${count === 1 ? '' : 's'}` : 'No days yet'}</span></div>)}
+            {withoutCity ? <div className="city-summary__missing"><strong>No city</strong><span>{withoutCity} day{withoutCity === 1 ? '' : 's'}</span></div> : null}
+          </div>
+          <button className="button button--secondary" type="button" onClick={() => navigate(`/trip/${tripId}/itinerary/cities`)}>Set city dates</button>
+        </section>
+      ) : null}
 
       {data.days.length ? (
         <section className="itinerary-summary-strip" aria-label="Itinerary summary">

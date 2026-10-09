@@ -6,13 +6,18 @@ import './styles/global.css'
 import { initializeDatabase } from './data/services/databaseService'
 import AppErrorBoundary from './shared/components/AppErrorBoundary'
 import FatalAppScreen from './shared/components/FatalAppScreen'
+import { pwaUpdate } from './shared/pwaUpdate'
 
-registerSW({
+const updateServiceWorker = registerSW({
   immediate: true,
+  onNeedRefresh() {
+    pwaUpdate.markReady()
+  },
   onRegisterError(error) {
     console.error('Service worker registration failed', error)
   },
 })
+pwaUpdate.setApply(() => updateServiceWorker(true))
 
 const rootElement = document.getElementById('root')
 

@@ -98,8 +98,8 @@ const normalizeUrl = (value: string | null) => {
 const normalizeDateTime = (value: string | null, label: string) => {
   const clean = value?.trim() || null
   if (!clean) return null
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(clean)) throw new Error(`${label} must include a valid date and time.`)
-  return clean
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(clean) || Number.isNaN(Date.parse(clean))) throw new Error(`${label} must include a valid date and time.`)
+  return clean.slice(0, 16)
 }
 
 const validateLink = async (tripId: string, linkType: BookingLinkType, linkId: string | null) => {

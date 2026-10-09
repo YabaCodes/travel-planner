@@ -1,0 +1,88 @@
+/* v0.14: activities that need a day, city date ranges, and the sort-by-time prompt. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.order-banner {
+  padding: 14px 16px;
+  border: 1px solid #cbd9d1;
+  border-radius: var(--radius-md);
+  background: rgba(220, 233, 226, 0.6);
+  color: #2f4a3e;
+  font-size: .85rem;
+  line-height: 1.5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.order-banner span { flex: 1 1 220px; }
+
+.unplaced-card {
+  padding: 16px;
+  border: 1px solid #e4cba8;
+  border-radius: var(--radius-md);
+  background: #f8efe3;
+  color: #5e4219;
+  display: grid;
+  gap: 12px;
+}
+.unplaced-card p { margin: 4px 0 0; font-size: .85rem; line-height: 1.5; }
+.unplaced-card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.unplaced-card li {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .75);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.unplaced-card li > span:first-child { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.unplaced-card small { color: #6b5232; font-size: .78rem; }
+.unplaced-card__actions { display: inline-flex; align-items: center; gap: 12px; }
+.unplaced-card__actions select {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 16px;
+}
+.unplaced-card__actions .text-button { min-height: 44px; font-size: .85rem; }
+
+.city-summary {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.city-summary__list { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.city-summary__list div { display: grid; gap: 2px; }
+.city-summary__list strong { font-size: .9rem; }
+.city-summary__list span { color: var(--ink-soft); font-size: .8rem; }
+.city-summary__missing strong { color: #8e423d; }
+
+.city-range {
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .72);
+  display: grid;
+  gap: 12px;
+}
+.city-range__heading { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.city-range__heading span { color: var(--ink-soft); font-size: .82rem; }
