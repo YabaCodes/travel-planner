@@ -9,7 +9,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': a new version waits until the traveler taps Reload, so nothing reloads mid-edit.
+      registerType: 'prompt',
       includeAssets: [
         'favicon.svg',
         'icons/apple-touch-icon.png',
@@ -51,7 +52,6 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        skipWaiting: true,
       },
     }),
   ],
