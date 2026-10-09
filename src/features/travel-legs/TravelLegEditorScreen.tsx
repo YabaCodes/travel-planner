@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 import PageIntro from '../../shared/components/PageIntro'
-import { travelLegService } from '../../data/services/travelLegService'
+import { arrivalLooksEarly, travelLegService } from '../../data/services/travelLegService'
 import type { TransportMode } from '../../data/types/entities'
 import './travel-legs.css'
 
@@ -108,7 +108,7 @@ function TravelLegEditorScreen() {
       <PageIntro
         eyebrow={isEditing ? 'Edit major travel' : `Major travel · ${data.trip.title}`}
         title={isEditing ? 'Update travel leg' : 'Add travel leg'}
-        description="Use linked destinations for the trip stops this leg connects, and origin/destination for the actual airport, station, terminal, city, or pickup point."
+        description="Link the trip cities this leg connects (leave From empty for the trip to the first city, and To empty for the trip home), so readiness can check your route. Origin and destination are the actual airport, station or address."
       />
 
       <section className="travel-leg-editor-card">
@@ -133,6 +133,7 @@ function TravelLegEditorScreen() {
             <label className="field"><span>Departure <small>optional</small></span><input type="datetime-local" value={departureAt} onChange={(event) => setDepartureAt(event.target.value)} /></label>
             <label className="field"><span>Arrival <small>optional</small></span><input type="datetime-local" value={arrivalAt} onChange={(event) => setArrivalAt(event.target.value)} /></label>
           </div>
+          {arrivalLooksEarly(departureAt || null, arrivalAt || null) ? <p className="field-note" role="status">Arrival is earlier than departure in local time. That's normal when flying east across the date line (for example Taipei → San Francisco); otherwise check the dates. Times are local at each end.</p> : <p className="field-note">Times are local at each end.</p>}
 
           <label className="field"><span>Notes <small>optional</small></span><textarea rows={4} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Terminal, seat, baggage, pickup point, connection details…" /></label>
 

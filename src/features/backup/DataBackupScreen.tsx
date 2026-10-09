@@ -103,7 +103,7 @@ function DataBackupScreen() {
   const restore = async () => {
     if (!preview) return
     const replaceMessage = `Replace ALL current Travel Planner data with “${selectedFileName}”?\n\nThis removes the current local database first. Create a fresh backup before continuing if you might need the current data.`
-    const mergeMessage = `Merge “${selectedFileName}” into the current database?\n\nNew IDs will be added. Matching IDs will be overwritten by the backup. Identical records will be skipped.`
+    const mergeMessage = `Merge “${selectedFileName}” into this device?\n\nRecords missing here are added. Where both have a copy, the newer one is kept, so recent edits and deletions on this device are not undone.`
     if (!window.confirm(restoreMode === 'replace' ? replaceMessage : mergeMessage)) return
 
     setBusy(true)
@@ -237,13 +237,13 @@ function DataBackupScreen() {
 
             <label className="field backup-mode-field"><span>Restore mode</span><select value={restoreMode} onChange={(event: ChangeEvent<HTMLSelectElement>) => setRestoreMode(event.target.value as RestoreMode)}><option value="replace">Replace all local data</option><option value="merge">Merge with current data</option></select><small>{restoreMode === 'replace' ? 'Clears the current Travel Planner database, then restores this complete backup.' : 'Adds new IDs, overwrites matching IDs, and skips records that are already identical.'}</small></label>
 
-            <div className={`backup-destructive-note ${restoreMode === 'replace' ? 'is-replace' : ''}`}><strong>{restoreMode === 'replace' ? 'Replace is destructive.' : 'Merge can overwrite matching IDs.'}</strong><span>{restoreMode === 'replace' ? 'Export your current data first if there is anything you may want to recover.' : 'The import is transactional, but make a backup first if you may want to undo the merge.'}</span></div>
+            <div className={`backup-destructive-note ${restoreMode === 'replace' ? 'is-replace' : ''}`}><strong>{restoreMode === 'replace' ? 'Replace is destructive.' : 'Merge keeps the newer copy.'}</strong><span>{restoreMode === 'replace' ? 'Export your current data first if there is anything you may want to recover.' : 'Records missing here are added; where both have a copy, the newer one wins. Make a backup first if you may want to undo the merge.'}</span></div>
             <div className="backup-actions"><button className="button button--primary" type="button" disabled={busy} onClick={restore}>{busy ? 'Restoring…' : 'Restore backup'}</button></div>
           </div>
         ) : null}
       </section>
 
-      {result ? <section className="backup-result" aria-live="polite"><div><span>Created</span><strong>{result.created}</strong></div><div><span>Updated</span><strong>{result.updated}</strong></div><div><span>Skipped</span><strong>{result.skipped}</strong></div><div><span>Errors</span><strong>{result.errors}</strong></div></section> : null}
+      {result ? <section className="backup-result" aria-live="polite"><div><span>Created</span><strong>{result.created}</strong></div><div><span>Updated</span><strong>{result.updated}</strong></div><div><span>Unchanged</span><strong>{result.skipped}</strong></div><div><span>Kept newer here</span><strong>{result.keptNewer}</strong></div></section> : null}
       {message ? <div className="status-banner" role="status"><span className="status-banner__dot" />{message}</div> : null}
       {error ? <p className="form-error" role="alert">{error}</p> : null}
     </div>

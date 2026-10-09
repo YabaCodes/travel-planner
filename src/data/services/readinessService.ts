@@ -1,7 +1,8 @@
 import { db } from '../db'
 import type { BaseRecord } from '../types/common'
-import type { Activity, Booking, PackingItem, TravelLeg, Trip, TripDay, TripInfoItem } from '../types/entities'
+import type { Activity, Booking, PackingItem, TravelLeg, Trip, TripDay, TripDestination, TripInfoItem } from '../types/entities'
 import { findActivityOverlaps } from '../utils/activityTime'
+import { formatDateRange } from '../utils/tripDate'
 
 const active = <T extends BaseRecord>(records: T[]): T[] => records.filter((record) => record.deleted_at === null)
 
@@ -61,6 +62,25 @@ const packingMetrics = (items: PackingItem[]) => {
 
 const travelLegTimingReview = (legs: TravelLeg[]) => legs.filter((leg) => !leg.departure_at || !leg.arrival_at).length
 
+// The route a trip needs: getting to the first city, each move between consecutive cities, and
+// getting home. A leg counts when it is linked to the trip cities it connects.
+const travelRoute = (destinations: TripDestination[], legs: TravelLeg[]) => {
+  const steps: Array<{ label: string; ok: boolean; between: boolean }> = []
+  steps.push({ label: 'getting there', ok: legs.some((leg) => !leg.from_destination_id && leg.to_destination_id), between: false })
+  for (let index = 1; index < destinations.length; index += 1) {
+    const from = destinations[index - 1]
+    const to = destinations[index]
+    steps.push({ label: `${from.city} → ${to.city}`, ok: legs.some((leg) => leg.from_destination_id === from.id && leg.to_destination_id === to.id), between: true })
+  }
+  steps.push({ label: 'getting home', ok: legs.some((leg) => leg.from_destination_id && !leg.to_destination_id), between: false })
+  return {
+    covered: steps.filter((step) => step.ok).map((step) => step.label),
+    missing: steps.filter((step) => !step.ok).map((step) => step.label),
+    missingBetween: steps.some((step) => step.between && !step.ok),
+    unlinked: legs.filter((leg) => !leg.from_destination_id && !leg.to_destination_id).length,
+  }
+}
+
 export const readinessService = {
   async getReadiness(tripId: string): Promise<TripReadinessData | null> {
     const trip = await db.trips.get(tripId)
@@ -78,7 +98,11 @@ export const readinessService = {
 
     const destinations = active(destinationsRaw).sort((a, b) => a.sequence - b.sequence)
     const days = active(daysRaw).sort((a, b) => a.position - b.position)
-    const activities = active(activitiesRaw)
+    const dayIds = new Set(days.map((day) => day.id))
+    const allActivities = active(activitiesRaw)
+    // Activities whose day was removed by a date change in an earlier version: they need a day again.
+    const unplaced = allActivities.filter((activity) => !dayIds.has(activity.trip_day_id)).length
+    const activities = allActivities.filter((activity) => dayIds.has(activity.trip_day_id))
     const bookings = active(bookingsRaw)
     const packingLists = active(packingListsRaw)
     const travelLegs = active(travelLegsRaw)
@@ -103,8 +127,7 @@ export const readinessService = {
     const toBookBookings = bookings.filter((booking) => booking.status === 'to_book').length
 
     const { totalPackingUnits, packedUnits, requiredPackingRemaining } = packingMetrics(packingItems)
-    const expectedTravelLegs = Math.max(0, destinations.length - 1)
-    const missingTravelLegs = Math.max(0, expectedTravelLegs - travelLegs.length)
+    const route = travelRoute(destinations, travelLegs)
     const incompleteTravelLegTimes = travelLegTimingReview(travelLegs)
 
     const checks: ReadinessCheck[] = []
@@ -114,7 +137,7 @@ export const readinessService = {
       label: 'Trip dates',
       category: 'Basics',
       status: hasDates ? 'ready' : 'action',
-      detail: hasDates ? `${trip.start_date} → ${trip.end_date}` : 'Set departure and return dates before travel.',
+      detail: hasDates ? formatDateRange(trip.start_date, trip.end_date) : 'Set departure and return dates before travel.',
       path: `/trip/${tripId}/edit`,
     })
 
@@ -122,8 +145,10 @@ export const readinessService = {
       id: 'itinerary',
       label: 'Daily itinerary',
       category: 'Itinerary',
-      status: !hasDates || days.length === 0 ? 'review' : emptyDays > 0 ? 'action' : 'ready',
-      detail: !hasDates || days.length === 0
+      status: unplaced > 0 ? 'action' : !hasDates || days.length === 0 ? 'review' : emptyDays > 0 ? 'action' : 'ready',
+      detail: unplaced > 0
+        ? `${unplaced} activit${unplaced === 1 ? 'y needs' : 'ies need'} a day again after an earlier date change.`
+        : !hasDates || days.length === 0
         ? 'Set trip dates to generate dated trip days.'
         : emptyDays > 0
           ? `${emptyDays} of ${days.length} trip day${days.length === 1 ? '' : 's'} have no active activities.`
@@ -141,7 +166,7 @@ export const readinessService = {
         : unassignedDays > 0
           ? `${unassignedDays} day${unassignedDays === 1 ? '' : 's'} still need a destination.`
           : 'Every trip day is assigned to a destination.',
-      path: `/trip/${tripId}/itinerary`,
+      path: destinations.length > 1 ? `/trip/${tripId}/itinerary/cities` : `/trip/${tripId}/itinerary`,
     })
 
     checks.push({
@@ -193,16 +218,20 @@ export const readinessService = {
       path: `/trip/${tripId}/more/packing`,
     })
 
+    const linkHint = route.unlinked
+      ? ` ${route.unlinked} leg${route.unlinked === 1 ? " isn't" : "s aren't"} linked to a trip city yet; link ${route.unlinked === 1 ? 'it' : 'them'} so ${route.unlinked === 1 ? 'it counts' : 'they count'}.`
+      : ''
     let travelLegStatus: ReadinessStatus = 'ready'
-    let travelLegDetail = destinations.length <= 1 && travelLegs.length === 0
-      ? 'No inter-destination travel leg is required.'
-      : `${travelLegs.length} major travel leg${travelLegs.length === 1 ? '' : 's'} recorded.`
-    if (missingTravelLegs > 0) {
+    let travelLegDetail = `Route covered: ${route.covered.join(', ')}.`
+    if (route.missingBetween) {
       travelLegStatus = 'action'
-      travelLegDetail = `${missingTravelLegs} inter-destination travel leg${missingTravelLegs === 1 ? '' : 's'} still appear to be missing.`
+      travelLegDetail = `Missing: ${route.missing.join(', ')}.${linkHint}`
+    } else if (route.missing.length) {
+      travelLegStatus = 'review'
+      travelLegDetail = `Not recorded yet: ${route.missing.join(' and ')}.${linkHint}`
     } else if (incompleteTravelLegTimes > 0) {
       travelLegStatus = 'review'
-      travelLegDetail = `${incompleteTravelLegTimes} travel leg${incompleteTravelLegTimes === 1 ? '' : 's'} are missing departure or arrival time.`
+      travelLegDetail = `${incompleteTravelLegTimes} travel leg${incompleteTravelLegTimes === 1 ? ' is' : 's are'} missing a departure or arrival time.`
     }
     checks.push({
       id: 'travel-legs',

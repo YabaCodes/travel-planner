@@ -7,8 +7,9 @@ import { itineraryService } from '../../data/services/itineraryService'
 import { transportService, type TransportSegmentView } from '../../data/services/transportService'
 import { bookingService } from '../../data/services/bookingService'
 import type { Activity, ActivityStatus, Booking } from '../../data/types/entities'
-import { endTimeForActivity, findActivityOverlaps, formatClockTime, formatDuration } from '../../data/utils/activityTime'
+import { endTimeForActivity, findActivityOverlaps, formatClockTime, formatDuration, isTimeOrdered } from '../../data/utils/activityTime'
 import { formatShortDate } from '../../data/utils/tripDate'
+import './itinerary-tools.css'
 
 const titleCase = (value: string) => value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
 const segmentKey = (fromId: string, toId: string) => `${fromId}::${toId}`
@@ -140,6 +141,8 @@ function TripDayScreen() {
           <div className="inline-actions"><button className="button button--primary" type="button" disabled={dayBusy} onClick={saveDay}>{dayBusy ? 'Saving…' : 'Save day'}</button></div>
         </div> : <div className="day-details-summary"><div><span>Destination</span><strong>{data.destination ? `${data.destination.city}, ${data.destination.country}` : 'Not assigned'}</strong></div><div><span>Notes</span><strong>{data.day.notes || 'No day notes'}</strong></div></div>}
       </section>
+
+      {!isTimeOrdered(data.activities) ? <div className="order-banner" role="status"><span><strong>Times are out of order.</strong> New and edited activities are placed by time; this day was planned before that.</span><button className="button button--secondary" type="button" onClick={() => itineraryService.sortDayByTime(dayId)}>Sort by time</button></div> : null}
 
       {data.overlapCount ? <div className="conflict-banner" role="status"><strong>Timing conflict detected.</strong><span> Activities marked below overlap based on their start time and duration. This is a warning only—you can keep the plan as-is.</span></div> : null}
 

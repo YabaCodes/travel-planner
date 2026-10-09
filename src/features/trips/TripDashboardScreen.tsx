@@ -102,7 +102,7 @@ function TripDashboardScreen() {
       </section>
 
       <section className="brief-card">
-        <div className="brief-card__heading"><div><span className="eyebrow">Trip Brief</span><h2>Planning context</h2></div><span className="trip-status">{titleCase(data.trip.status)}</span></div>
+        <div className="brief-card__heading"><div><span className="eyebrow">Trip Brief</span><h2>Planning context</h2></div><button className="button button--secondary" type="button" onClick={() => navigate(`/trip/${tripId}/brief`)}>Edit details</button></div>
         <div className="brief-grid">
           <div><span>Destinations</span><strong>{destinationLabel || 'Not specified'}</strong></div>
           <div><span>Travelers</span><strong>{travelerNames || `${data.travelers.length} traveler${data.travelers.length === 1 ? '' : 's'}`}</strong></div>

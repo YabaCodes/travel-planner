@@ -4,6 +4,8 @@ import AppMark from '../shared/components/AppMark'
 import BottomNavigation from '../shared/components/BottomNavigation'
 import ConnectionStatus from '../shared/components/ConnectionStatus'
 import SidebarNavigation from '../shared/components/SidebarNavigation'
+import UpdateBanner from '../shared/components/UpdateBanner'
+import packageJson from '../../package.json'
 import '../styles/app-shell.css'
 
 const getTripIdFromPath = (pathname: string) => {
@@ -32,10 +34,11 @@ function AppShell() {
           <button className="brand-button" onClick={() => navigate('/trips')} aria-label="Open My Trips">
             <AppMark />
           </button>
-          <span className="milestone-pill">V1 candidate · 0.13</span>
+          <span className="milestone-pill">v{packageJson.version}</span>
         </header>
 
         <main className="app-content">
+          <UpdateBanner />
           <ConnectionStatus />
           <Outlet />
         </main>

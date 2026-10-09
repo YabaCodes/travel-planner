@@ -269,3 +269,7 @@
 
 .runtime-status strong { margin-bottom: 2px; }
 .runtime-status span { color: inherit; opacity: .86; }
+
+/* v0.14: "new version ready" banner */
+.update-banner { flex-wrap: wrap; margin-bottom: 16px; }
+.update-banner > span:nth-child(2) { flex: 1 1 200px; }

@@ -3,6 +3,7 @@ import HomeIcon from '../icons/HomeIcon'
 import CalendarIcon from '../icons/CalendarIcon'
 import TodayIcon from '../icons/TodayIcon'
 import MoreIcon from '../icons/MoreIcon'
+import packageJson from '../../../package.json'
 
 interface SidebarNavigationProps { tripId: string | null }
 const activeClass = ({ isActive }: { isActive: boolean }) => `sidebar-link${isActive ? ' is-active' : ''}`
@@ -17,7 +18,7 @@ function SidebarNavigation({ tripId }: SidebarNavigationProps) {
         <NavLink to={`/trip/${tripId}/today`} className={activeClass}><TodayIcon /><span>Today</span></NavLink>
         <NavLink to={`/trip/${tripId}/more`} className={activeClass}><MoreIcon /><span>More</span></NavLink>
       </> : <div className="sidebar-hint">Open a trip to unlock itinerary, today, and trip tools.</div>}
-      <div className="sidebar-version">V1 candidate · v0.13</div>
+      <div className="sidebar-version">v{packageJson.version}</div>
     </div>
   )
 }

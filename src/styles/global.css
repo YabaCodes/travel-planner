@@ -2015,3 +2015,10 @@ summary {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* v0.14: date-and-time inputs have a wide built-in minimum width; let fields shrink to the screen
+   so forms with them don't overflow on small phones (320 px). */
+.field { min-width: 0; }
+.field input,
+.field select,
+.field textarea { min-width: 0; max-width: 100%; }

@@ -7,6 +7,7 @@ import { transportService } from '../../data/services/transportService'
 import { bookingService } from '../../data/services/bookingService'
 import { placeService } from '../../data/services/placeService'
 import type { Activity, Booking, Place, TransportSegment, TripDay } from '../../data/types/entities'
+import { chronologicalOrder, pickNextActivity } from '../../data/utils/activityTime'
 import './today.css'
 
 const titleCase = (value: string) => value.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())
@@ -148,10 +149,10 @@ function TodayScreen() {
   const isLiveDay = selectedDay.date === browserToday
   const placeMap = new Map<string, Place>(tripPlaces.map((view) => [view.tripPlace.id, view.place] as [string, Place]))
   const segmentByPair = new Map(transportData.segments.map((view) => [`${view.segment.from_activity_id}->${view.segment.to_activity_id}`, view.segment]))
-  const visibleActivities = dayData.activities.filter((activity) => activity.status !== 'cancelled')
-  const nextActivity = visibleActivities.find((activity) => activity.status === 'in_progress')
-    ?? visibleActivities.find((activity) => activity.status === 'planned')
-    ?? null
+  // Today always reads in clock order, even for days planned before activities were kept in time order.
+  const orderedActivities = chronologicalOrder(dayData.activities)
+  const visibleActivities = orderedActivities.filter((activity) => activity.status !== 'cancelled')
+  const nextActivity = pickNextActivity(orderedActivities, isLiveDay ? now.getHours() * 60 + now.getMinutes() : null)
   const nextPlace = nextActivity?.trip_place_id ? placeMap.get(nextActivity.trip_place_id) ?? null : null
   const nextBookings = nextActivity ? bookingMap[nextActivity.id] ?? [] : []
   const inboundSegment = nextActivity
@@ -231,13 +232,13 @@ function TodayScreen() {
       )}
 
       <section className="today-timeline-section">
-        <div className="today-section-heading"><div><span className="eyebrow">Day timeline</span><h2>{selectedDay.title || `Day ${selectedDay.day_number}`}</h2></div><span>{dayData.activities.length} activit{dayData.activities.length === 1 ? 'y' : 'ies'}</span></div>
+        <div className="today-section-heading"><div><span className="eyebrow">Day timeline</span><h2>{selectedDay.title || `Day ${selectedDay.day_number}`}</h2></div><span>{orderedActivities.length} activit{orderedActivities.length === 1 ? 'y' : 'ies'}</span></div>
 
-        {!dayData.activities.length ? <div className="today-empty today-empty--compact"><p>No activities are scheduled for this day yet.</p></div> : <div className="today-timeline">
-          {dayData.activities.map((activity, index) => {
+        {!orderedActivities.length ? <div className="today-empty today-empty--compact"><p>No activities are scheduled for this day yet.</p></div> : <div className="today-timeline">
+          {orderedActivities.map((activity, index) => {
             const place = activity.trip_place_id ? placeMap.get(activity.trip_place_id) ?? null : null
             const bookings = bookingMap[activity.id] ?? []
-            const next = dayData.activities[index + 1]
+            const next = orderedActivities[index + 1]
             const segment: TransportSegment | null = next ? segmentByPair.get(`${activity.id}->${next.id}`) ?? null : null
             const packedStatus = activity.status === 'completed' || activity.status === 'skipped' || activity.status === 'cancelled'
             return <div className="today-timeline-block" key={activity.id}>

@@ -51,8 +51,27 @@ const getTrip = async (tripId: string) => {
 const normalizeDateTime = (value: string | null, label: string) => {
   const clean = value?.trim() || null
   if (!clean) return null
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(clean)) throw new Error(`${label} must include a valid date and time.`)
-  return clean
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(clean) || Number.isNaN(Date.parse(clean))) throw new Error(`${label} must include a valid date and time.`)
+  return clean.slice(0, 16)
+}
+
+// Local times at each end can't be compared exactly without time zones: flying east across the date
+// line (Taipei → San Francisco) really does arrive "before" it leaves. No trip differs by more than
+// 26 hours of time zone, so anything earlier than that is a typo.
+const MAX_ZONE_GAP_MINUTES = 26 * 60
+export const arrivalLooksEarly = (departureAt: string | null, arrivalAt: string | null) =>
+  Boolean(departureAt && arrivalAt && arrivalAt < departureAt)
+
+const validateTimes = (departureAt: string | null, arrivalAt: string | null) => {
+  if (!departureAt || !arrivalAt) return
+  const gap = (Date.parse(`${departureAt}:00Z`) - Date.parse(`${arrivalAt}:00Z`)) / 60000
+  if (gap > MAX_ZONE_GAP_MINUTES) throw new Error('Arrival is more than a day before departure. Check the dates.')
+}
+
+// Links a leg to a trip city when its origin or destination names that city ("Paris Gare du Nord").
+const matchDestination = (text: string, destinations: TripDestination[]) => {
+  const lower = text.toLowerCase()
+  return destinations.find((destination) => destination.city && new RegExp(`(^|[^\\p{L}])${destination.city.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\p{L}]|$)`, 'u').test(lower)) ?? null
 }
 
 const validateDestination = async (tripId: string, destinationId: string | null, label: string) => {
@@ -76,13 +95,16 @@ const validateDraft = async (tripId: string, draft: TravelLegDraft) => {
     validateDestination(tripId, draft.toDestinationId, 'To destination'),
   ])
 
+  const departureAt = normalizeDateTime(draft.departureAt, 'Departure')
+  const arrivalAt = normalizeDateTime(draft.arrivalAt, 'Arrival')
+  validateTimes(departureAt, arrivalAt)
   return {
     origin,
     destination,
     operator: draft.operator?.trim() || null,
     serviceNumber: draft.serviceNumber?.trim() || null,
-    departureAt: normalizeDateTime(draft.departureAt, 'Departure'),
-    arrivalAt: normalizeDateTime(draft.arrivalAt, 'Arrival'),
+    departureAt,
+    arrivalAt,
     notes: draft.notes?.trim() || null,
   }
 }
@@ -142,12 +164,20 @@ export const travelLegService = {
     const trip = await getTrip(tripId)
     if (!trip) throw new Error('Trip not found.')
     const validated = await validateDraft(tripId, draft)
+    // New legs that name a trip city are linked to it, so readiness can check the route.
+    const destinations = active(await db.tripDestinations.where('trip_id').equals(tripId).toArray())
+    let fromId = draft.fromDestinationId ?? matchDestination(validated.origin, destinations)?.id ?? null
+    let toId = draft.toDestinationId ?? matchDestination(validated.destination, destinations)?.id ?? null
+    if (fromId && fromId === toId) {
+      fromId = draft.fromDestinationId
+      toId = draft.toDestinationId
+    }
 
     const leg: TravelLeg = {
       ...createRecordMetadata(),
       trip_id: tripId,
-      from_destination_id: draft.fromDestinationId,
-      to_destination_id: draft.toDestinationId,
+      from_destination_id: fromId,
+      to_destination_id: toId,
       mode: draft.mode,
       operator: validated.operator,
       service_number: validated.serviceNumber,
